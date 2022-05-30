@@ -1,0 +1,34 @@
+<html>
+<head>
+  <script src="//unpkg.com/vanic/index.min.js"></script>
+</head>
+<body>
+
+  <!-- target id -->
+  <div id="app"></div>
+
+  <!-- script -->
+  <script>
+    const { html, render, useState, useEffect } = Vanic;
+
+    const Counter = () => {
+      const [count, setCount] = useState(0);
+    
+      useEffect(() => {
+        console.log(count);
+      }, [count]);
+    
+      return html`
+        <div>
+          <h1>Counter App</h1>
+          <button onclick="${() => setCount(count + 1)}">+</button>
+          <button onclick="${() => setCount(count - 1)}">-</button>
+          <h2>${count}</h2>
+        </div>
+      `
+    }
+    
+    render(Counter, document.getElementById("app"));
+  </script>
+</body>
+</html>

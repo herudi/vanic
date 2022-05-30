@@ -1,0 +1,26 @@
+{
+  "name": "vanic",
+  "version": "0.0.4",
+  "description": "A small, hook-based library for creating reactive-ui in Vanilla.",
+  "main": "index.node.js",
+  "browser": "index.min.js",
+  "unpkg": "index.min.js",
+  "module": "index.esm.js",
+  "types": "index.d.ts",
+  "author": "herudi",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/herudi/vanic"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
+  "keywords": [
+    "Hook in vanillajs",
+    "1kb Reactive-UI vanillajs",
+    "Tiny jsx for vanilla"
+  ],
+  "dependencies": {},
+  "devDependencies": {}
+}
