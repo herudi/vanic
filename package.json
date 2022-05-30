@@ -30,7 +30,7 @@
     "ava": "^4.2.0",
     "browser-env": "^3.3.0",
     "prettier": "^2.6.2",
-    "rollup": "^2.56.3",
+    "rollup": "^2.57.3",
     "rollup-plugin-terser": "^7.0.2",
     "rollup-plugin-uglify": "^5.0.2"
   }
