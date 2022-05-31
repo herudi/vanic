@@ -1,11 +1,11 @@
 /* @jsx h */
 const test = require('ava');
-const { render, h } = require('./../../npm/index.cjs.js')
+const { renderToString, h } = require('./../../npm/index.cjs.js')
 
 test('render return as string', t => {
   const Home = () => {
     return <h1>Hello Vanic</h1>
   }
-  const str = render(Home)
+  const str = renderToString(Home)
   t.is(str, '<h1>Hello Vanic</h1>')
 })

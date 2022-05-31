@@ -89,27 +89,11 @@ var Vanic = (function (exports) {
 
   let reRender;
   let reElem;
-  let fno = {};
-  let rep = {};
+  let fno = [];
   let idx = 0;
   let sid = 0;
   let hooks = [];
   let cleans = [];
-
-  const styleToString = (style) => {
-    return Object.keys(style).reduce(
-      (acc, key) =>
-        acc +
-        key
-          .split(/(?=[A-Z])/)
-          .join("-")
-          .toLowerCase() +
-        ":" +
-        style[key] +
-        ";",
-      ""
-    );
-  };
 
   function _render(fn) {
     const res = fn();
@@ -117,20 +101,21 @@ var Vanic = (function (exports) {
     const elem = document.createElement("div");
     elem.innerHTML = res;
     diff(elem, reElem);
-    for (const k in fno) {
-      const name = fno[k];
-      for (const l in name) {
-        const act = name[l];
-        const $ = document.querySelector(`[_v${(typeof act)[0]}="${l}"]`);
-        if (typeof act === "object") {
-          for (const s in act) $[k.toLowerCase()][s] = act[s];
-        } else $[k.toLowerCase()] = act;
+    let i = fno.length;
+    while (i--) {
+      const { k, v } = fno[i];
+      const $ = document.querySelector(`[_v${(typeof v)[0]}="${i}"]`);
+      if ($) {
+        if (typeof v === "object") {
+          for (const s in v) $[k.toLowerCase()][s] = v[s];
+        } else {
+          $[k.toLowerCase()] = v;
+        }
       }
     }
     idx = 0;
     sid = 0;
-    fno = {};
-    return res;
+    fno = [];
   }
 
   function useEffect(cb, deps) {
@@ -164,9 +149,7 @@ var Vanic = (function (exports) {
         const value = val;
         const attr = `_v${type[0]}="${id}`;
         const name = (arr[arr.length - 1] || "").replace(/=|"/g, "");
-        fno[name] = fno[name] || {};
-        fno[name][id] = value;
-        if (type !== "function") rep[`${attr}"`] = [name, value];
+        fno[id] = { k: name, v: value };
         a = arr.slice(0, -1).join(" ") + ` ${attr}`;
         val = "";
       }
@@ -189,23 +172,13 @@ var Vanic = (function (exports) {
   function render(fn, elem) {
     reRender = undefined;
     reElem = undefined;
-    fno = {};
+    fno = [];
     idx = 0;
     sid = 0;
     hooks = [];
     cleans = [];
-    if (!elem) {
-      return fn().replace(/ _v[o|f|b]="\d+"/g, (a) => {
-        const arr = rep[a.substring(1)];
-        if (arr === undefined) return "";
-        const type = typeof arr[1];
-        if (type === "object") return ` ${arr[0]}="${styleToString(arr[1])}"`;
-        if (type === "boolean" && arr[1] === true) return ` ${arr[0]}`;
-        return "";
-      });
-    }
     reElem = elem;
-    return _render(fn);
+    _render(fn);
   }
 
   exports.html = html;

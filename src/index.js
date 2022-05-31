@@ -5,4 +5,5 @@ export {
   useEffect,
   useState,
   Fragment,
+  renderToString,
 } from "./vanic/index.js";

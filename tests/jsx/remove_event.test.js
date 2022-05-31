@@ -1,6 +1,6 @@
 /* @jsx h */
 const test = require('ava');
-const { render, h } = require('./../../npm/index.cjs.js')
+const { renderToString, h } = require('./../../npm/index.cjs.js')
 
 test('render removing all event', t => {
   const Home = () => {
@@ -9,6 +9,6 @@ test('render removing all event', t => {
     }
     return <button onclick={click}>Click Me !</button>
   }
-  const str = render(Home)
+  const str = renderToString(Home)
   t.is(str, '<button>Click Me !</button>')
 })

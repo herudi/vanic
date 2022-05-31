@@ -2,7 +2,7 @@
 A small ~1kb, Hook-based library for creating Reactive-UI in Vanilla.
 
 [![ci](https://github.com/herudi/vanic/workflows/ci/badge.svg)](https://github.com/herudi/vanic)
-[![npm version](https://img.shields.io/badge/npm-0.0.6-blue.svg)](https://npmjs.org/package/vanic)
+[![npm version](https://img.shields.io/badge/npm-0.0.7-blue.svg)](https://npmjs.org/package/vanic)
 [![License](https://img.shields.io/:license-mit-blue.svg)](http://badges.mit-license.org)
 [![download-url](https://img.shields.io/npm/dm/vanic.svg)](https://npmjs.org/package/vanic)
 [![minzip](https://img.shields.io/bundlephobia/minzip/vanic)](https://github.com/herudi/vanic)
@@ -98,6 +98,26 @@ render(Counter, document.getElementById("app"));
     </script>
   </body>
 </html>
+```
+### Server Side
+```js
+/* @jsx h */
+import { h, renderToString, useState, Fragment } from "vanic";
+
+const Counter = () => {
+  const [count, setCount] = useState(0);
+
+  return (
+    <Fragment>
+      <button onclick={() => setCount(count + 1)}>Click Me</button>
+      <h2>{count}</h2>
+    </Fragment>
+  )
+}
+
+const str = renderToString(Counter);
+console.log(str);
+// send in the server.
 ```
 ## Hooks
 ### UseState
