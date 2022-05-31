@@ -1,7 +1,7 @@
 /* @jsx h */
 const test = require('ava');
 const createApp = require('../_create_app.js');
-const { render, h } = require('./../../npm/index.node.js')
+const { render, h } = require('./../../npm/index.cjs.js')
 
 test('render with document and add event onclick', t => {
   const app = createApp()

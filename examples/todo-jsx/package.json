@@ -1,0 +1,21 @@
+{
+  "name": "jsx",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "esbuild src/index.jsx --bundle --minify --outfile=public/todo.js",
+    "dev": "node dev.js",
+    "start": "esbuild --servedir=public --serve=3000"
+  },
+  "type": "module",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "esbuild": "^0.14.42"
+  },
+  "dependencies": {
+    "vanic": "^0.0.6"
+  }
+}

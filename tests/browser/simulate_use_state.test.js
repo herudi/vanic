@@ -1,6 +1,6 @@
 const test = require('ava');
 const createApp = require('../_create_app.js');
-const { render, html, useState } = require('./../../npm/index.node.js')
+const { render, html, useState } = require('./../../npm/index.cjs.js')
 
 test('simulate useState.', (t) => {
   const app = createApp()

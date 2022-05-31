@@ -1,5 +1,5 @@
 const test = require('ava');
-const { render, html } = require('./../../npm/index.node.js')
+const { render, html } = require('./../../npm/index.cjs.js')
 
 test('render return as string', t => {
   const Home = () => {

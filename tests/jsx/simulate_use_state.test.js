@@ -1,7 +1,7 @@
 /* @jsx h */
 const test = require('ava');
 const createApp = require('../_create_app.js');
-const { render, h, useState, Fragment } = require('./../../npm/index.node.js')
+const { render, h, useState, Fragment } = require('./../../npm/index.cjs.js')
 
 test('simulate useState.', (t) => {
   const app = createApp()

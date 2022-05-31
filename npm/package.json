@@ -1,9 +1,8 @@
 {
   "name": "vanic",
-  "version": "0.0.4",
+  "version": "0.0.6",
   "description": "A small, hook-based library for creating reactive-ui in Vanilla.",
-  "main": "index.node.js",
-  "browser": "index.min.js",
+  "main": "index.cjs.js",
   "unpkg": "index.min.js",
   "module": "index.esm.js",
   "types": "index.d.ts",
