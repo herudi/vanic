@@ -11,9 +11,7 @@ A small, Hook-based library for creating Reactive-UI in Vanilla.
 - Reactive-UI.
 - Hook-based in vanilla.
 - No compiler and build-tool required.
-
-> For syntax highlight, just install vscode extensions for literal html [lit-html](https://marketplace.visualstudio.com/items?itemName=bierner.lit-html).
-
+- Template literal.
 
 ## Install
 ### NPM or Yarn
@@ -62,6 +60,7 @@ const Counter = () => {
 
 render(Counter, document.getElementById("app"));
 ```
+> For syntax highlight, just install vscode extensions for literal html [lit-html](https://marketplace.visualstudio.com/items?itemName=bierner.lit-html).
 
 ### Usage in browser
 ```js
@@ -96,6 +95,24 @@ const Counter = () => {
 const str = renderToString(Counter);
 console.log(str);
 // send in the server.
+```
+### Passing Props
+```js
+import { html, render } from "vanic";
+
+const Title = props => html`<h1>${props.text}</h1>`;
+
+const Home = () => {
+
+  return html`
+    <div>
+      ${Title({ text: "My Title" })}
+      <h2>Welcome</h2>
+    </div>
+  `;
+}
+
+render(Home, document.getElementById("app"));
 ```
 ## Hooks
 ### UseState
