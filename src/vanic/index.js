@@ -10,7 +10,7 @@ let hooks = [];
 let cleans = [];
 const warnHTML = "dangerouslySetInnerHTML";
 function esc(unsafe) {
-  return unsafe
+  return String(unsafe)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -41,13 +41,13 @@ function _render(fn) {
   diff(elem, reElem);
   let i = fno.length;
   while (i--) {
-    const { k, v } = fno[i];
-    const $ = document.querySelector(`[_v${(typeof v)[0]}="${i}"]`);
+    const { key, value } = fno[i];
+    const $ = document.querySelector(`[_v${(typeof value)[0]}="${i}"]`);
     if ($) {
-      if (typeof v === "object") {
-        for (const s in v) $[k.toLowerCase()][s] = v[s];
+      if (typeof value === "object") {
+        for (const s in value) $[key.toLowerCase()][s] = value[s];
       } else {
-        $[k.toLowerCase()] = v;
+        $[key.toLowerCase()] = value;
       }
     }
   }
@@ -86,9 +86,9 @@ export function html(ret) {
       const arr = a.split(" ");
       const value = val;
       const attr = `_v${type[0]}="${id}`;
-      const name = (arr[arr.length - 1] || "").replace(/=|"/g, "");
-      fno[id] = { k: name, v: value };
-      if (type !== "function") rep[`${attr}"`] = [name, value];
+      const key = (arr[arr.length - 1] || "").replace(/=|"/g, "");
+      fno[id] = { key, value };
+      if (type !== "function") rep[`${attr}"`] = { key, value };
       a = arr.slice(0, -1).join(" ") + ` ${attr}`;
       val = "";
     }
@@ -99,10 +99,11 @@ export function html(ret) {
 export function useState(val) {
   const id = sid;
   sid++;
+  const def = hooks[id] === undefined ? val : hooks[id];
   return [
-    hooks[id] === undefined ? val : hooks[id],
+    def,
     (newVal) => {
-      hooks[id] = newVal;
+      hooks[id] = typeof newVal === "function" ? newVal(def) : newVal;
       if (reRender) _render(reRender);
     },
   ];
@@ -112,11 +113,12 @@ export function renderToString(fn) {
   return (typeof fn === "string" ? fn : fn()).replace(
     / _v[o|f|b]="\d+"/g,
     (a) => {
-      const arr = rep[a.substring(1)];
-      if (arr === undefined) return "";
-      const type = typeof arr[1];
-      if (type === "object") return ` ${arr[0]}="${styleToString(arr[1])}"`;
-      if (type === "boolean" && arr[1] === true) return ` ${arr[0]}`;
+      const obj = rep[a.substring(1)];
+      if (obj === undefined) return "";
+      const { key, value } = obj;
+      const type = typeof value;
+      if (type === "object") return ` ${key}="${styleToString(value)}"`;
+      if (value === true) return ` ${key}`;
       return "";
     }
   );
@@ -138,11 +140,9 @@ export function h(tag, attr) {
   const args = [].slice.call(arguments, 2);
   const arr = [];
   let str = "";
-  let len = args.length;
   attr = attr || {};
-  while (len--) {
-    const arg = args[len];
-    arr.push(typeof arg === "number" ? String(arg) : arg);
+  for (let i = args.length; i--; ) {
+    arr.push(typeof args[i] === "number" ? String(args[i]) : args[i]);
   }
   if (typeof tag === "function") {
     attr.children = arr.reverse();
@@ -157,11 +157,11 @@ export function h(tag, attr) {
         if (type === "function" || type === "boolean" || type === "object") {
           const id = `${idx++}`;
           const value = val;
-          const name = k;
-          fno[id] = { k: name, v: value };
+          const key = k;
+          fno[id] = { key, value };
           k = `_v${type[0]}`;
           val = id;
-          if (type !== "function") rep[`${k}="${val}"`] = [name, value];
+          if (type !== "function") rep[`${k}="${val}"`] = { key, value };
         }
         if (
           val !== undefined &&
@@ -170,7 +170,7 @@ export function h(tag, attr) {
           k !== warnHTML &&
           k !== ""
         ) {
-          str += ` ${k}="${val}"`;
+          str += ` ${k}="${esc(val)}"`;
         }
       }
     }
@@ -199,15 +199,9 @@ export function h(tag, attr) {
     if (attr[warnHTML]) {
       str += attr[warnHTML].__html;
     } else {
-      while (arr.length) {
-        const child = arr.pop();
-        if (child) {
-          if (child.pop) {
-            for (let i = child.length; i--; ) arr.push(child[i]);
-          } else {
-            str += child[0] !== "<" ? esc(child) : child;
-          }
-        }
+      for (let i = arr.length; i--; ) {
+        const child = Array.isArray(arr[i]) ? arr[i].join("") : arr[i];
+        str += child[0] !== "<" ? esc(child) : child;
       }
     }
     str += tag ? `</${tag}>` : "";

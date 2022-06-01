@@ -103,13 +103,13 @@ var Vanic = (function (exports) {
     diff(elem, reElem);
     let i = fno.length;
     while (i--) {
-      const { k, v } = fno[i];
-      const $ = document.querySelector(`[_v${(typeof v)[0]}="${i}"]`);
+      const { key, value } = fno[i];
+      const $ = document.querySelector(`[_v${(typeof value)[0]}="${i}"]`);
       if ($) {
-        if (typeof v === "object") {
-          for (const s in v) $[k.toLowerCase()][s] = v[s];
+        if (typeof value === "object") {
+          for (const s in value) $[key.toLowerCase()][s] = value[s];
         } else {
-          $[k.toLowerCase()] = v;
+          $[key.toLowerCase()] = value;
         }
       }
     }
@@ -148,8 +148,8 @@ var Vanic = (function (exports) {
         const arr = a.split(" ");
         const value = val;
         const attr = `_v${type[0]}="${id}`;
-        const name = (arr[arr.length - 1] || "").replace(/=|"/g, "");
-        fno[id] = { k: name, v: value };
+        const key = (arr[arr.length - 1] || "").replace(/=|"/g, "");
+        fno[id] = { key, value };
         a = arr.slice(0, -1).join(" ") + ` ${attr}`;
         val = "";
       }
@@ -160,10 +160,11 @@ var Vanic = (function (exports) {
   function useState(val) {
     const id = sid;
     sid++;
+    const def = hooks[id] === undefined ? val : hooks[id];
     return [
-      hooks[id] === undefined ? val : hooks[id],
+      def,
       (newVal) => {
-        hooks[id] = newVal;
+        hooks[id] = typeof newVal === "function" ? newVal(def) : newVal;
         if (reRender) _render(reRender);
       },
     ];

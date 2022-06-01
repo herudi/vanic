@@ -16,6 +16,6 @@
     "esbuild": "^0.14.42"
   },
   "dependencies": {
-    "vanic": "^0.0.6"
+    "vanic": "^0.0.8"
   }
 }
