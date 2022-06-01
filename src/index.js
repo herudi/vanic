@@ -1,9 +1,8 @@
 export {
-  h,
   html,
   render,
   useEffect,
   useState,
-  Fragment,
+  useReducer,
   renderToString,
 } from "./vanic/index.js";

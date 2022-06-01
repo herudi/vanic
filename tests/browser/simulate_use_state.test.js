@@ -11,8 +11,8 @@ test('simulate useState.', (t) => {
 <h1>${count}</h1>`
   }
   render(Home, document.getElementById('app'))
-  const btn = document.querySelector('[_vf="0"]')
+  const btn = document.querySelector('[c-f="0"]')
   btn.click()
-  t.is(app.innerHTML, `<button _vf="0">btn</button>
+  t.is(app.innerHTML, `<button c-f="0">btn</button>
 <h1>1</h1>`)
 })

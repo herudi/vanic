@@ -96,15 +96,6 @@ let idx = 0;
 let sid = 0;
 let hooks = [];
 let cleans = [];
-const warnHTML = "dangerouslySetInnerHTML";
-function esc(unsafe) {
-  return String(unsafe)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
 
 const styleToString = (style) => {
   return Object.keys(style).reduce(
@@ -130,7 +121,7 @@ function _render(fn) {
   let i = fno.length;
   while (i--) {
     const { key, value } = fno[i];
-    const $ = document.querySelector(`[_v${(typeof value)[0]}="${i}"]`);
+    const $ = document.querySelector(`[c-${(typeof value)[0]}="${i}"]`);
     if ($) {
       if (typeof value === "object") {
         for (const s in value) $[key.toLowerCase()][s] = value[s];
@@ -165,22 +156,22 @@ function useEffect(cb, deps) {
 
 function html(ret) {
   const subs = [].slice.call(arguments, 1);
-  return ret.reduce((a, b, c) => {
-    let val = subs[c - 1];
+  return ret.reduce((start, end, no) => {
+    let val = subs[no - 1];
     if (val === null || val === undefined) val = "";
     const type = typeof val;
     if (type === "function" || type === "boolean" || type === "object") {
       const id = `${idx++}`;
-      const arr = a.split(" ");
+      const arr = start.split(" ");
       const value = val;
-      const attr = `_v${type[0]}="${id}`;
       const key = (arr[arr.length - 1] || "").replace(/=|"/g, "");
+      const attr = `c-${type[0]}="${id}`;
       fno[id] = { key, value };
       if (type !== "function") rep[`${attr}"`] = { key, value };
-      a = arr.slice(0, -1).join(" ") + ` ${attr}`;
+      start = arr.slice(0, -1).join(" ") + ` ${attr}`;
       val = "";
     }
-    return a + String(val) + b;
+    return start + String(val) + end;
   });
 }
 
@@ -192,14 +183,14 @@ function useState(val) {
     def,
     (newVal) => {
       hooks[id] = typeof newVal === "function" ? newVal(def) : newVal;
-      if (reRender) _render(reRender);
+      _render(reRender);
     },
   ];
 }
 
 function renderToString(fn) {
   return (typeof fn === "string" ? fn : fn()).replace(
-    / _v[o|f|b]="\d+"/g,
+    / c-[o|f|b]="\d+"/g,
     (a) => {
       const obj = rep[a.substring(1)];
       if (obj === undefined) return "";
@@ -210,6 +201,16 @@ function renderToString(fn) {
       return "";
     }
   );
+}
+
+function useReducer(reducer, init, initLazy) {
+  const arr = useState(initLazy !== undefined ? initLazy(init) : init);
+  return [
+    arr[0],
+    (action) => {
+      arr[1](reducer(state, action));
+    },
+  ];
 }
 
 function render(fn, elem) {
@@ -224,85 +225,9 @@ function render(fn, elem) {
   _render(fn);
 }
 
-function h(tag, attr) {
-  const args = [].slice.call(arguments, 2);
-  const arr = [];
-  let str = "";
-  attr = attr || {};
-  for (let i = args.length; i--; ) {
-    arr.push(typeof args[i] === "number" ? String(args[i]) : args[i]);
-  }
-  if (typeof tag === "function") {
-    attr.children = arr.reverse();
-    return tag(attr);
-  }
-  if (tag) {
-    str += `<${tag}`;
-    if (attr) {
-      for (let k in attr) {
-        let val = attr[k];
-        const type = typeof val;
-        if (type === "function" || type === "boolean" || type === "object") {
-          const id = `${idx++}`;
-          const value = val;
-          const key = k;
-          fno[id] = { key, value };
-          k = `_v${type[0]}`;
-          val = id;
-          if (type !== "function") rep[`${k}="${val}"`] = { key, value };
-        }
-        if (
-          val !== undefined &&
-          val !== false &&
-          val !== null &&
-          k !== warnHTML &&
-          k !== ""
-        ) {
-          str += ` ${k}="${esc(val)}"`;
-        }
-      }
-    }
-    str += ">";
-  }
-  if (
-    [
-      "area",
-      "base",
-      "br",
-      "col",
-      "command",
-      "embed",
-      "hr",
-      "img",
-      "input",
-      "keygen",
-      "link",
-      "meta",
-      "param",
-      "source",
-      "track",
-      "wbr",
-    ].indexOf(tag) === -1
-  ) {
-    if (attr[warnHTML]) {
-      str += attr[warnHTML].__html;
-    } else {
-      for (let i = arr.length; i--; ) {
-        const child = Array.isArray(arr[i]) ? arr[i].join("") : arr[i];
-        str += child[0] !== "<" ? esc(child) : child;
-      }
-    }
-    str += tag ? `</${tag}>` : "";
-  }
-  return str;
-}
-
-const Fragment = ({ children }) => h("", null, children);
-
-exports.Fragment = Fragment;
-exports.h = h;
 exports.html = html;
 exports.render = render;
 exports.renderToString = renderToString;
 exports.useEffect = useEffect;
+exports.useReducer = useReducer;
 exports.useState = useState;

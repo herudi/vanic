@@ -12,7 +12,7 @@ test('simulate click event.', (t) => {
     return html`<button onclick="${click}">Click Me !</button>`
   }
   render(Home, document.getElementById('app'))
-  const btn = document.querySelector('[_vf="0"]')
+  const btn = document.querySelector('[c-f="0"]')
   btn.click()
   t.is(spy.click, true)
 })

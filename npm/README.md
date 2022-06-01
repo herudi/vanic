@@ -1,15 +1,16 @@
 ## Vanic
-A small ~1kb, Hook-based library for creating Reactive-UI in Vanilla.
+A small, Hook-based library for creating Reactive-UI in Vanilla.
 
 [![ci](https://github.com/herudi/vanic/workflows/ci/badge.svg)](https://github.com/herudi/vanic)
-[![npm version](https://img.shields.io/badge/npm-0.0.8-blue.svg)](https://npmjs.org/package/vanic)
+[![npm version](https://img.shields.io/badge/npm-0.0.9-blue.svg)](https://npmjs.org/package/vanic)
 [![License](https://img.shields.io/:license-mit-blue.svg)](http://badges.mit-license.org)
 [![download-url](https://img.shields.io/npm/dm/vanic.svg)](https://npmjs.org/package/vanic)
+[![gzip](https://img.badgesize.io/https:/unpkg.com/vanic/index.min.js?label=gzip&compression=gzip)](https://github.com/herudi/vanic)
 
 ## Features
 - Reactive-UI.
-- Hook-based. `useState` and `useEffect` in vanilla.
-- jsx support.
+- Hook-based in vanilla.
+- No compiler and build-tool required.
 
 > For syntax highlight, just install vscode extensions for literal html [lit-html](https://marketplace.visualstudio.com/items?itemName=bierner.lit-html).
 
@@ -40,39 +41,28 @@ yarn add vanic
 ```
 ## Usage
 
-### Template Literal
 ```js
-import { html, render, useState } from "vanic";
+import { html, render, useState, useEffect } from "vanic";
 
 const Counter = () => {
   const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    // log counter
+    console.log(count);
+  }, [count]);
 
   return html`
-    <button onclick="${() => setCount(count + 1)}">Click Me</button>
-    <h2>${count}</h2>
-  `
+    <div>
+      <button onclick="${() => setCount(count + 1)}">Click Me</button>
+      <h2>${count}</h2>
+    </div>
+  `;
 }
 
 render(Counter, document.getElementById("app"));
 ```
-### Jsx
-```jsx
-/* @jsx h */
-import { h, render, useState, Fragment } from "vanic";
 
-const Counter = () => {
-  const [count, setCount] = useState(0);
-
-  return (
-    <Fragment>
-      <button onclick={() => setCount(count + 1)}>Click Me</button>
-      <h2>{count}</h2>
-    </Fragment>
-  )
-}
-
-render(Counter, document.getElementById("app"));
-```
 ### Usage in browser
 ```js
 <html>
@@ -83,35 +73,24 @@ render(Counter, document.getElementById("app"));
     <div id="app"></div>
     <script>
       const { html, render, useState } = Vanic;
-
-      const Counter = () => {
-        const [count, setCount] = useState(0);
-
-        return html`
-          <button onclick="${() => setCount(count + 1)}">Click Me</button>
-          <h2>${count}</h2>
-        `
-      }
-
-      render(Counter, document.getElementById("app"));
+      //more code here
     </script>
   </body>
 </html>
 ```
 ### Server Side
 ```js
-/* @jsx h */
 import { h, renderToString, useState, Fragment } from "vanic";
 
 const Counter = () => {
   const [count, setCount] = useState(0);
 
-  return (
-    <Fragment>
-      <button onclick={() => setCount(count + 1)}>Click Me</button>
-      <h2>{count}</h2>
-    </Fragment>
-  )
+  return html`
+    <div>
+      <button onclick="${() => setCount(count + 1)}">Click Me</button>
+      <h2>${count}</h2>
+    </div>
+  `;
 }
 
 const str = renderToString(Counter);
@@ -134,6 +113,11 @@ useEffect(() => {
     // cleanup
   }
 }, [/* deps */]);
+```
+### UseReducer
+This hooks inspired `React.useReducer`.
+```js
+const [todos, dispatch] = useReducer(reducer, initTodos, /* initLazy optional */);
 ```
 
 ### Custom Hook

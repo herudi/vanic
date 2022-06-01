@@ -11,5 +11,5 @@ test('render with document and add event onclick', t => {
     return html`<button onclick="${click}">Click Me !</button>`
   }
   render(Home, document.getElementById('app'))
-  t.is(app.innerHTML, '<button _vf="0">Click Me !</button>')
+  t.is(app.innerHTML, '<button c-f="0">Click Me !</button>')
 })

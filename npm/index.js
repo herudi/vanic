@@ -104,7 +104,7 @@ var Vanic = (function (exports) {
     let i = fno.length;
     while (i--) {
       const { key, value } = fno[i];
-      const $ = document.querySelector(`[_v${(typeof value)[0]}="${i}"]`);
+      const $ = document.querySelector(`[c-${(typeof value)[0]}="${i}"]`);
       if ($) {
         if (typeof value === "object") {
           for (const s in value) $[key.toLowerCase()][s] = value[s];
@@ -139,21 +139,21 @@ var Vanic = (function (exports) {
 
   function html(ret) {
     const subs = [].slice.call(arguments, 1);
-    return ret.reduce((a, b, c) => {
-      let val = subs[c - 1];
+    return ret.reduce((start, end, no) => {
+      let val = subs[no - 1];
       if (val === null || val === undefined) val = "";
       const type = typeof val;
       if (type === "function" || type === "boolean" || type === "object") {
         const id = `${idx++}`;
-        const arr = a.split(" ");
+        const arr = start.split(" ");
         const value = val;
-        const attr = `_v${type[0]}="${id}`;
         const key = (arr[arr.length - 1] || "").replace(/=|"/g, "");
+        const attr = `c-${type[0]}="${id}`;
         fno[id] = { key, value };
-        a = arr.slice(0, -1).join(" ") + ` ${attr}`;
+        start = arr.slice(0, -1).join(" ") + ` ${attr}`;
         val = "";
       }
-      return a + String(val) + b;
+      return start + String(val) + end;
     });
   }
 
@@ -165,7 +165,17 @@ var Vanic = (function (exports) {
       def,
       (newVal) => {
         hooks[id] = typeof newVal === "function" ? newVal(def) : newVal;
-        if (reRender) _render(reRender);
+        _render(reRender);
+      },
+    ];
+  }
+
+  function useReducer(reducer, init, initLazy) {
+    const arr = useState(initLazy !== undefined ? initLazy(init) : init);
+    return [
+      arr[0],
+      (action) => {
+        arr[1](reducer(state, action));
       },
     ];
   }
@@ -185,6 +195,7 @@ var Vanic = (function (exports) {
   exports.html = html;
   exports.render = render;
   exports.useEffect = useEffect;
+  exports.useReducer = useReducer;
   exports.useState = useState;
 
   Object.defineProperty(exports, '__esModule', { value: true });

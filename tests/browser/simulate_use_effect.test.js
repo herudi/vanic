@@ -42,9 +42,9 @@ test('simulate useEffect.', async (t) => {
   }
   render(Home, document.getElementById('app'))
   await sleep(3000)
-  const btn = document.querySelector('[_vf="0"]')
+  const btn = document.querySelector('[c-f="0"]')
   btn.click()
   await sleep(1000)
-  t.is(app.innerHTML, `<button _vf="0">Click Me !</button>
+  t.is(app.innerHTML, `<button c-f="0">Click Me !</button>
 <h1>0 1 1 Is Clean</h1>`)
 })

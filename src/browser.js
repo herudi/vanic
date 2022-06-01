@@ -1,1 +1,7 @@
-export { html, render, useEffect, useState } from "./vanic/index.js";
+export {
+  html,
+  render,
+  useEffect,
+  useState,
+  useReducer,
+} from "./vanic/index.js";
