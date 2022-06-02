@@ -3,7 +3,7 @@ import { uglify } from "rollup-plugin-uglify";
 import { getBabelOutputPlugin } from '@rollup/plugin-babel';
 import * as fs from "fs";
 
-const VERSION = "0.0.9";
+const VERSION = "0.0.10";
 try {
   fs.rmSync("npm", { recursive: true });
 } catch (error) {/* noop */ }

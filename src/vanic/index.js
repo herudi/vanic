@@ -71,6 +71,7 @@ export function html(ret) {
   return ret.reduce((start, end, no) => {
     let val = subs[no - 1];
     if (val === null || val === undefined) val = "";
+    if (Array.isArray(val)) val = val.join("");
     const type = typeof val;
     if (type === "function" || type === "boolean" || type === "object") {
       const id = `${idx++}`;

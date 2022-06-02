@@ -2,7 +2,7 @@
 A small, Hook-based library for creating Reactive-UI in Vanilla.
 
 [![ci](https://github.com/herudi/vanic/workflows/ci/badge.svg)](https://github.com/herudi/vanic)
-[![npm version](https://img.shields.io/badge/npm-0.0.9-blue.svg)](https://npmjs.org/package/vanic)
+[![npm version](https://img.shields.io/badge/npm-0.0.10-blue.svg)](https://npmjs.org/package/vanic)
 [![License](https://img.shields.io/:license-mit-blue.svg)](http://badges.mit-license.org)
 [![download-url](https://img.shields.io/npm/dm/vanic.svg)](https://npmjs.org/package/vanic)
 [![gzip](https://img.badgesize.io/https:/unpkg.com/vanic/index.min.js?label=gzip&compression=gzip)](https://github.com/herudi/vanic)
@@ -11,9 +11,7 @@ A small, Hook-based library for creating Reactive-UI in Vanilla.
 - Reactive-UI.
 - Hook-based in vanilla.
 - No compiler and build-tool required.
-
-> For syntax highlight, just install vscode extensions for literal html [lit-html](https://marketplace.visualstudio.com/items?itemName=bierner.lit-html).
-
+- Template literal.
 
 ## Install
 ### NPM or Yarn
@@ -62,6 +60,7 @@ const Counter = () => {
 
 render(Counter, document.getElementById("app"));
 ```
+> For syntax highlight, just install vscode extensions for literal html [lit-html](https://marketplace.visualstudio.com/items?itemName=bierner.lit-html).
 
 ### Usage in browser
 ```js
@@ -96,6 +95,24 @@ const Counter = () => {
 const str = renderToString(Counter);
 console.log(str);
 // send in the server.
+```
+### Passing Props
+```js
+import { html, render } from "vanic";
+
+const Title = props => html`<h1>${props.text}</h1>`;
+
+const Home = () => {
+
+  return html`
+    <div>
+      ${Title({ text: "My Title" })}
+      <h2>Welcome</h2>
+    </div>
+  `;
+}
+
+render(Home, document.getElementById("app"));
 ```
 ## Hooks
 ### UseState
