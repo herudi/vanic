@@ -18,9 +18,7 @@
             return html`
               <div>
                 <span style="${{ marginRight: 20 }}">${el.name}</span>
-                <button onclick="${() => {
-                  console.log('hello')
-                }}">x</button>
+                <button onclick="${() => onDelete(el.key)}">x</button>
               </div>
             `;
           })}
