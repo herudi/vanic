@@ -1,6 +1,5 @@
 // CREDIT & ORIGINAL: https://gomakethings.com/dom-diffing-with-vanilla-js
 // Add diff attribute
-
 function getNodeType(node) {
   if (node.nodeType === 3) return "text";
   if (node.nodeType === 8) return "comment";
@@ -11,7 +10,8 @@ function getAttr(node, attr) {
 }
 function getNodeContent(node, attr) {
   if (attr) {
-    if (attr === "href" || attr === "van-link") return getAttr(node, attr);
+    if (attr === "href" || attr === "van-link" || attr.startsWith("c-"))
+      return getAttr(node, attr);
     if (typeof node[attr] !== "string") return getAttr(node, attr);
     return node[attr];
   }
@@ -55,7 +55,11 @@ function diff(template, elem) {
             let nm = attr.name;
             if (nm.startsWith("class")) nm = "className";
             if (nm.endsWith("for")) nm = "htmlFor";
-            domNodes[index][nm] = tpl;
+            if (nm.startsWith("c-")) {
+              domNodes[index].setAttribute(nm, tpl);
+            } else {
+              domNodes[index][nm] = tpl;
+            }
           }
         }
         i++;
@@ -200,16 +204,6 @@ function renderToString(fn) {
   );
 }
 
-function useReducer(reducer, init, initLazy) {
-  const arr = useState(initLazy !== undefined ? initLazy(init) : init);
-  return [
-    arr[0],
-    (action) => {
-      arr[1](reducer(state, action));
-    },
-  ];
-}
-
 function render(fn, elem) {
   reRender = undefined;
   reElem = undefined;
@@ -222,4 +216,4 @@ function render(fn, elem) {
   _render(fn);
 }
 
-export { html, render, renderToString, useEffect, useReducer, useState };
+export { html, render, renderToString, useEffect, useState };

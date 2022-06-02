@@ -116,16 +116,6 @@ export function renderToString(fn) {
   );
 }
 
-export function useReducer(reducer, init, initLazy) {
-  const arr = useState(initLazy !== undefined ? initLazy(init) : init);
-  return [
-    arr[0],
-    (action) => {
-      arr[1](reducer(state, action));
-    },
-  ];
-}
-
 export function render(fn, elem) {
   reRender = undefined;
   reElem = undefined;

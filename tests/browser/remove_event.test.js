@@ -1,5 +1,5 @@
 const test = require('ava');
-const { renderToString, html } = require('./../../npm/index.cjs.js')
+const { renderToString, html } = require('./../../npm/index.js')
 
 test('render removing all event', t => {
   const Home = () => {

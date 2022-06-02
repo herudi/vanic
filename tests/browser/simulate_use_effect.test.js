@@ -1,6 +1,6 @@
 const test = require('ava');
 const createApp = require('../_create_app.js');
-const { render, html, useEffect, useState } = require('./../../npm/index.cjs.js')
+const { render, html, useEffect, useState } = require('./../../npm/index.js')
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 

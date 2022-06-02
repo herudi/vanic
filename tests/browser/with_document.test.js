@@ -1,6 +1,6 @@
 const test = require('ava');
 const createApp = require('../_create_app.js');
-const { render, html } = require('./../../npm/index.cjs.js')
+const { render, html } = require('./../../npm/index.js')
 
 test('render with document and add event onclick', t => {
   const app = createApp()

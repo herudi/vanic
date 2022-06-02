@@ -1,0 +1,64 @@
+<html>
+<head>
+  <script src="//unpkg.com/vanic/index.min.js"></script>
+</head>
+<body>
+
+  <!-- target id -->
+  <div id="app"></div>
+
+  <!-- script -->
+  <script>
+    const { html, render, useState } = Vanic;
+
+    const List = ({ todos, onDelete }) => {
+      return html`
+        <div>
+          ${todos.map(el => {
+            return html`
+              <div>
+                <span style="${{ marginRight: 20 }}">${el.name}</span>
+                <button onclick="${() => {
+                  console.log('hello')
+                }}">x</button>
+              </div>
+            `;
+          })}
+        </div>
+      `
+    }
+
+    const Todo = () => {
+      const [todos, setTodos] = useState([]);
+      const [todoText, setTodoText] = useState("");
+
+      const addTodo = (e) => {
+        e.preventDefault();
+        setTodos([...todos, {
+          name: todoText,
+          key: Date.now().toString()
+        }]);
+        setTodoText("")
+      }
+
+      const onDelete = (key) => {
+        const arr = todos.filter(el => el.key !== key);
+        setTodos(arr);
+      }
+    
+      return html`
+        <div>
+          <h1>Todo</h1>
+          <form onsubmit="${addTodo}">
+            <input value="${todoText}" onchange="${(e) => setTodoText(e.target.value)}" placeholder="Enter todo" />
+            <button type="submit">Add</button>
+          </form>
+          ${List({ todos, onDelete  })}
+        </div>
+      `
+    }
+    
+    render(Todo, document.getElementById("app"));
+  </script>
+</body>
+</html>

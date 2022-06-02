@@ -3,7 +3,7 @@ import { uglify } from "rollup-plugin-uglify";
 import { getBabelOutputPlugin } from '@rollup/plugin-babel';
 import * as fs from "fs";
 
-const VERSION = "0.0.10";
+const VERSION = "0.0.11";
 try {
   fs.rmSync("npm", { recursive: true });
 } catch (error) {/* noop */ }
@@ -17,7 +17,7 @@ fs.writeFileSync("./npm/package.json", JSON.stringify({
   "name": "vanic",
   "version": VERSION,
   "description": "A small, hook-based library for creating reactive-ui in Vanilla.",
-  "main": "index.cjs.js",
+  "main": "index.js",
   "unpkg": "index.min.js",
   "module": "index.esm.js",
   "types": "index.d.ts",
@@ -42,7 +42,7 @@ const config = [
   {
     input: "src/index.js",
     output: [
-      { file: 'npm/index.cjs.js', format: 'cjs' },
+      { file: 'npm/index.js', format: 'cjs' },
       { file: 'npm/index.esm.js', format: 'esm' }
     ]
   },
@@ -69,8 +69,7 @@ const config = [
           }),
           uglify()
         ]
-      },
-      { file: 'npm/index.js', format: 'iife', name: 'Vanic' }
+      }
     ]
   }
 ];
