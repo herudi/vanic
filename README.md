@@ -79,7 +79,7 @@ render(Counter, document.getElementById("app"));
 ```
 ### Server Side
 ```js
-import { h, renderToString, useState, Fragment } from "vanic";
+import { h, renderToString, useState } from "vanic";
 
 const Counter = () => {
   const [count, setCount] = useState(0);
