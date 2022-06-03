@@ -163,7 +163,7 @@ function html(ret) {
     const type = typeof val;
     if (type === "function" || type === "boolean" || type === "object") {
       const id = `${idx++}`;
-      const arr = start.split(" ");
+      const arr = start.match(/[^ ]+/g);
       const value = val;
       const key = (arr[arr.length - 1] || "").replace(/=|"/g, "");
       const attr = `c-${type[0]}="${id}`;
