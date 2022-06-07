@@ -1,5 +1,5 @@
-const test = require('ava');
-const { renderToString, html } = require('./../../npm/index.js')
+import test from 'ava';
+import { renderToString, html } from '../src/index.js';
 
 test('render return as string', t => {
   const Home = () => {

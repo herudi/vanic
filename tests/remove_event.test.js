@@ -1,5 +1,5 @@
-const test = require('ava');
-const { renderToString, html } = require('./../../npm/index.js')
+import test from 'ava';
+import { renderToString, html } from '../src/index.js';
 
 test('render removing all event', t => {
   const Home = () => {

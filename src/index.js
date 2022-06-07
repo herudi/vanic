@@ -1,7 +1,13 @@
 export {
   html,
   render,
+  renderToString,
   useEffect,
   useState,
-  renderToString,
+  useReducer,
+  useMemo,
+  useRef,
+  useCallback,
+  useContext,
+  createContext,
 } from "./vanic/index.js";

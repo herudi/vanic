@@ -1,6 +1,6 @@
-const test = require('ava');
-const createApp = require('../_create_app.js');
-const { render, html, useState } = require('./../../npm/index.js')
+import test from 'ava';
+import createApp from './_create_app.js';
+import { render, html, useState } from '../src/index.js';
 
 test('simulate useState.', (t) => {
   const app = createApp()

@@ -5,9 +5,12 @@ let reElem;
 let fno = [];
 let rep = {};
 let idx = 0;
-let sid = 0;
-let hooks = [];
+
+// hook var
+let hid = 0;
+let states = [];
 let cleans = [];
+let mems = [];
 
 const styleToString = (style) => {
   return Object.keys(style).reduce(
@@ -24,7 +27,7 @@ const styleToString = (style) => {
   );
 };
 
-function _render(fn) {
+export function _render(fn) {
   const res = fn();
   reRender = fn;
   const elem = document.createElement("div");
@@ -42,28 +45,9 @@ function _render(fn) {
       }
     }
   }
+  hid = 0;
   idx = 0;
-  sid = 0;
   fno = [];
-}
-
-export function useEffect(cb, deps) {
-  if (!reElem) return;
-  const id = sid;
-  const old = hooks[id];
-  const cc = old ? deps.some((dep, x) => !Object.is(dep, old[x])) : true;
-  hooks[id] = deps;
-  if (cleans[id]) {
-    cleans[id]();
-    cleans.splice(id, 1);
-  }
-  sid++;
-  if (cc) {
-    setTimeout(() => {
-      const fn = cb();
-      if (fn) cleans[id] = fn;
-    });
-  }
 }
 
 export function html(ret) {
@@ -74,31 +58,19 @@ export function html(ret) {
     if (Array.isArray(val)) val = val.join("");
     const type = typeof val;
     if (type === "function" || type === "boolean" || type === "object") {
-      const id = `${idx++}`;
       const arr = start.match(/[^ ]+/g);
       const value = val;
       const key = (arr[arr.length - 1] || "").replace(/=|"/g, "");
+      const id = idx;
       const attr = `c-${type[0]}="${id}`;
       fno[id] = { key, value };
       if (type !== "function") rep[`${attr}"`] = { key, value };
       start = arr.slice(0, -1).join(" ") + ` ${attr}`;
       val = "";
+      idx++;
     }
     return start + String(val) + end;
   });
-}
-
-export function useState(val) {
-  const id = sid;
-  sid++;
-  const def = hooks[id] === undefined ? val : hooks[id];
-  return [
-    def,
-    (newVal) => {
-      hooks[id] = typeof newVal === "function" ? newVal(def) : newVal;
-      _render(reRender);
-    },
-  ];
 }
 
 export function renderToString(fn) {
@@ -118,12 +90,97 @@ export function renderToString(fn) {
 
 export function render(fn, elem) {
   reRender = undefined;
-  reElem = undefined;
   fno = [];
   idx = 0;
-  sid = 0;
-  hooks = [];
-  cleans = [];
   reElem = elem;
+  hid = 0;
+  states = [];
+  cleans = [];
+  mems = [];
   _render(fn);
 }
+
+function hasChange(id, deps) {
+  const hook = states[id];
+  const cc = hook ? deps.some((dep, x) => !Object.is(dep, hook[x])) : true;
+  states[id] = deps;
+  return cc;
+}
+
+// useState
+export function useState(val) {
+  const id = hid;
+  hid++;
+  const def = states[id] === undefined ? val : states[id];
+  return [
+    def,
+    (newVal) => {
+      states[id] = typeof newVal === "function" ? newVal(def) : newVal;
+      _render(reRender);
+    },
+  ];
+}
+
+// useEffect
+export function useEffect(cb, deps) {
+  if (!reElem) return;
+  const id = hid;
+  const cc = hasChange(id, deps);
+  if (cleans[id]) {
+    cleans[id]();
+    cleans.splice(id, 1);
+  }
+  hid++;
+  if (cc) {
+    setTimeout(() => {
+      const fn = cb();
+      if (fn) cleans[id] = fn;
+    });
+  }
+}
+
+// useReducer
+export function useReducer(reducer, init, initLazy) {
+  const arr = useState(initLazy !== undefined ? initLazy(init) : init);
+  return [
+    arr[0],
+    (action) => {
+      arr[1](reducer(arr[0], action));
+    },
+  ];
+}
+
+// useMemo
+export function useMemo(fn, deps) {
+  if (!reElem) return fn();
+  const id = hid;
+  const cc = hasChange(id, deps);
+  if (cc) mems[id] = fn();
+  hid++;
+  return mems[id] || fn();
+}
+
+// useCallback
+export const useCallback = (cb, deps) => useMemo(() => (p) => cb(p), deps);
+
+// useRef
+export const useRef = (current) => useMemo(() => ({ current }), []);
+
+// createContext
+export const createContext = (init) => {
+  return {
+    val: undefined,
+    Provider(value, fn) {
+      this.val = value || init;
+      return fn();
+    },
+    v() {
+      return this.val;
+    },
+  };
+};
+
+// useContext
+export const useContext = (ctx) => {
+  return ctx.v();
+};

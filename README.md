@@ -2,7 +2,7 @@
 A small, Hook-based library for creating Reactive-UI in Vanilla.
 
 [![ci](https://github.com/herudi/vanic/workflows/ci/badge.svg)](https://github.com/herudi/vanic)
-[![npm version](https://img.shields.io/badge/npm-0.0.12-blue.svg)](https://npmjs.org/package/vanic)
+[![npm version](https://img.shields.io/badge/npm-0.0.13-blue.svg)](https://npmjs.org/package/vanic)
 [![License](https://img.shields.io/:license-mit-blue.svg)](http://badges.mit-license.org)
 [![download-url](https://img.shields.io/npm/dm/vanic.svg)](https://npmjs.org/package/vanic)
 [![gzip](https://img.badgesize.io/https:/unpkg.com/vanic/index.min.js?label=gzip&compression=gzip)](https://github.com/herudi/vanic)
@@ -39,7 +39,7 @@ yarn add vanic
 ```
 ### Deno
 ```ts
-import { html, render, useState } from "https://deno.land/x/vanic@0.0.12/mod.ts";
+import { html, render, useState } from "https://deno.land/x/vanic@0.0.13/mod.ts";
 
 // more code
 ```
@@ -122,13 +122,10 @@ render(Home, document.getElementById("app"));
 ```
 ## Hooks
 ### UseState
-This hooks inspired `React.useState`.
-
 ```js
 const [state, setState] = useState(0);
 ```
 ### UseEffect
-This hooks inspired `React.useEffect`.
 ```js
 useEffect(() => {
   // code
@@ -136,6 +133,61 @@ useEffect(() => {
     // cleanup
   }
 }, [/* deps */]);
+```
+### UseReducer
+```js
+const [state, dispatch] = useReducer(reducer, initial, /* initLazy */);
+```
+### UseMemo
+```js
+const value = useMemo(() => expensiveFunc(a, b), [a, b]);
+```
+### UseCallback
+```js
+const addTodo = useCallback(() => {
+  setTodos((prev) => [...prev, "New Todo"]);
+}, [todos]);
+```
+### UseRef
+```js
+const count = useRef(0);
+```
+> Note: `useRef` for access DOM different from react.
+
+Accesing DOM via useRef
+```js
+const Home = () => {
+  const input = useRef(() => document.getElementById("input"));
+
+  return html`
+    <div>
+      <input id="input"/>
+      <button onclick="${() => {
+        input.current().focus();
+      }}">Focus Me</button>
+    </div>
+  `;
+}
+```
+### UseContext
+> Note: `UseContext` different from react.
+```js
+
+const ThemeContext = createContext();
+
+const Home = () => {
+  const theme = useContext(ThemeContext);
+
+  return html`
+    <h1 style="${{ color: theme.color }}">Hello Home</h1>
+  `;
+};
+
+const App = () => {
+  return ThemeContext.Provider({ color: "red" }, () => Home());
+}
+
+render(App, document.getElementById("app"));
 ```
 ### Custom Hook
 Very simple with custom hook.
@@ -188,9 +240,6 @@ const MyForm = () => {
 
 render(MyForm, document.getElementById("app"));
 ```
-### More Hooks
-For more hooks you can find in `examples/hooks`. just copy to your stack.
-
 ## Style
 Support style with object.
 ```js

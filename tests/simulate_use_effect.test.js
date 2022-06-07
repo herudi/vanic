@@ -1,6 +1,6 @@
-const test = require('ava');
-const createApp = require('../_create_app.js');
-const { render, html, useEffect, useState } = require('./../../npm/index.js')
+import test from 'ava';
+import createApp from './_create_app.js';
+import { render, html, useEffect, useState } from '../src/index.js';
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
