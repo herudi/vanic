@@ -12,6 +12,15 @@ let states = [];
 let cleans = [];
 let mems = [];
 
+function esc(unsafe) {
+  return String(unsafe)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 const styleToString = (style) => {
   return Object.keys(style).reduce(
     (acc, key) =>
@@ -35,13 +44,17 @@ export function _render(fn) {
   diff(elem, reElem);
   let i = fno.length;
   while (i--) {
-    const { key, value } = fno[i];
-    const $ = document.querySelector(`[c-${(typeof value)[0]}="${i}"]`);
-    if ($) {
-      if (typeof value === "object") {
-        for (const s in value) $[key.toLowerCase()][s] = value[s];
-      } else {
-        $[key.toLowerCase()] = value;
+    const obj = fno[i];
+    const value = obj.value;
+    const key = obj.key.toLowerCase();
+    if (key !== "ref") {
+      const $ = document.querySelector(`[c-${i}="${i}"]`);
+      if ($) {
+        if (typeof value === "object") {
+          for (const s in value) $[key][s] = value[s];
+        } else {
+          $[key] = value;
+        }
       }
     }
   }
@@ -60,32 +73,38 @@ export function html(ret) {
     if (type === "function" || type === "boolean" || type === "object") {
       const arr = start.match(/[^ ]+/g);
       const value = val;
-      const key = (arr[arr.length - 1] || "").replace(/=|"/g, "");
-      const id = idx;
-      const attr = `c-${type[0]}="${id}`;
+      const key = (arr[arr.length - 1] || "").replace(/=|"/g, "").toLowerCase();
+      const id = idx++;
+      const attr = `c-${id}="${id}`;
+      if (key === "ref") {
+        val.ref = () => document.querySelector(`[${attr}"]`);
+      }
       fno[id] = { key, value };
       if (type !== "function") rep[`${attr}"`] = { key, value };
       start = arr.slice(0, -1).join(" ") + ` ${attr}`;
       val = "";
-      idx++;
     }
-    return start + String(val) + end;
+    return start + esc(val) + end;
   });
 }
 
 export function renderToString(fn) {
-  return (typeof fn === "string" ? fn : fn()).replace(
-    / c-[o|f|b]="\d+"/g,
-    (a) => {
-      const obj = rep[a.substring(1)];
-      if (obj === undefined) return "";
-      const { key, value } = obj;
-      const type = typeof value;
-      if (type === "object") return ` ${key}="${styleToString(value)}"`;
-      if (value === true) return ` ${key}`;
-      return "";
+  return (typeof fn === "string" ? fn : fn()).replace(/ c-.*="\d+"/g, (a) => {
+    const arr = (a || "").split(" ");
+    let str = "";
+    for (let i = 0; i < arr.length; i++) {
+      const ret = rep[arr[i]];
+      if (ret) {
+        const { key, value } = ret;
+        const type = typeof value;
+        if (type === "object" && key !== "ref") {
+          str += ` ${key}="${styleToString(value)}"`;
+        }
+        if (value === true) str += ` ${key}`;
+      }
     }
-  );
+    return str;
+  });
 }
 
 export function render(fn, elem) {
@@ -139,6 +158,8 @@ export function useEffect(cb, deps) {
   }
 }
 
+export const useLayoutEffect = useEffect;
+
 // useReducer
 export function useReducer(reducer, init, initLazy) {
   const arr = useState(initLazy !== undefined ? initLazy(init) : init);
@@ -164,23 +185,102 @@ export function useMemo(fn, deps) {
 export const useCallback = (cb, deps) => useMemo(() => (p) => cb(p), deps);
 
 // useRef
-export const useRef = (current) => useMemo(() => ({ current }), []);
+export const useRef = (current) =>
+  useMemo(() => ({ current, ref: () => current }), []);
 
 // createContext
 export const createContext = (init) => {
+  let value;
   return {
-    val: undefined,
-    Provider(value, fn) {
-      this.val = value || init;
+    Provider(newVal, fn) {
+      value = newVal || init;
       return fn();
     },
-    v() {
-      return this.val;
-    },
+    v: () => value,
   };
 };
 
 // useContext
-export const useContext = (ctx) => {
-  return ctx.v();
+export const useContext = (c) => {
+  return c.v();
 };
+
+// CREDIT & ORIGINAL https://github.com/developit/vhtml
+// Add event, ref and style as object.
+const dangerHTML = "dangerouslySetInnerHTML";
+export function h(tag, attr) {
+  const args = [].slice.call(arguments, 2);
+  const arr = [];
+  let str = "";
+  attr = attr || {};
+  for (let i = args.length; i--; ) {
+    arr.push(typeof args[i] === "number" ? String(args[i]) : args[i]);
+  }
+  if (typeof tag === "function") {
+    attr.children = arr.reverse();
+    return tag(attr);
+  }
+  if (tag) {
+    str += `<${tag}`;
+    if (attr) {
+      for (let k in attr) {
+        let val = attr[k];
+        const type = typeof val;
+        if (type === "function" || type === "boolean" || type === "object") {
+          const id = idx++;
+          const value = val;
+          const key = k.toLowerCase();
+          if (key === "ref") {
+            val.ref = () => document.querySelector(`[c-${id}="${id}"]`);
+          }
+          fno[id] = { key, value };
+          k = `c-${id}`;
+          val = id;
+          if (type !== "function") rep[`${k}="${val}"`] = { key, value };
+        }
+        if (
+          val !== undefined &&
+          val !== false &&
+          val !== null &&
+          k !== dangerHTML
+        ) {
+          str += ` ${k}="${esc(val)}"`;
+        }
+      }
+    }
+    str += ">";
+  }
+  if (
+    [
+      "area",
+      "base",
+      "br",
+      "col",
+      "command",
+      "embed",
+      "hr",
+      "img",
+      "input",
+      "keygen",
+      "link",
+      "meta",
+      "param",
+      "source",
+      "track",
+      "wbr",
+    ].indexOf(tag) === -1
+  ) {
+    if (attr[dangerHTML]) {
+      str += attr[dangerHTML].__html;
+    } else {
+      for (let i = arr.length; i--; ) {
+        const child = Array.isArray(arr[i]) ? arr[i].join("") : arr[i];
+        str += child[0] !== "<" ? esc(child) : child;
+      }
+    }
+    str += tag ? `</${tag}>` : "";
+  }
+  return str;
+}
+
+export const Fragment = ({ children }) => h(null, null, children);

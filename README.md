@@ -2,15 +2,16 @@
 A small, Hook-based library for creating Reactive-UI in Vanilla.
 
 [![ci](https://github.com/herudi/vanic/workflows/ci/badge.svg)](https://github.com/herudi/vanic)
-[![npm version](https://img.shields.io/badge/npm-0.0.13-blue.svg)](https://npmjs.org/package/vanic)
+[![npm version](https://img.shields.io/badge/npm-0.0.14-blue.svg)](https://npmjs.org/package/vanic)
 [![License](https://img.shields.io/:license-mit-blue.svg)](http://badges.mit-license.org)
 [![download-url](https://img.shields.io/npm/dm/vanic.svg)](https://npmjs.org/package/vanic)
 [![gzip](https://img.badgesize.io/https:/unpkg.com/vanic/index.min.js?label=gzip&compression=gzip)](https://github.com/herudi/vanic)
 
 ## Features
 - Reactive-UI.
-- Hook-based in vanilla.
+- Hooks.
 - No compiler and build-tool required.
+- Jsx & literals HTML.
 
 ## Install
 ### NPM or Yarn
@@ -39,11 +40,37 @@ yarn add vanic
 ```
 ### Deno
 ```ts
-import { html, render, useState } from "https://deno.land/x/vanic@0.0.13/mod.ts";
+/** @jsx h */
+import { h, render, useState } from "https://deno.land/x/vanic@0.0.14/mod.ts";
 
 // more code
 ```
 ## Usage
+### Jsx
+> Note: jsx requires build-tools.
+```jsx
+/** @jsx h */
+import { h, Fragment, render, useState, useEffect } from "vanic";
+
+const Counter = () => {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    // log counter
+    console.log(count);
+  }, [count]);
+
+  return (
+    <Fragment>
+      <button onClick={() => setCount(count + 1)}>Click Me</button>
+      <h2>{count}</h2>
+    </Fragment>
+  )
+}
+
+render(Counter, document.getElementById("app"));
+```
+### Literals Html
 
 ```js
 import { html, render, useState, useEffect } from "vanic";
@@ -84,25 +111,19 @@ render(Counter, document.getElementById("app"));
 </html>
 ```
 ### Server Side
-```js
-import { html, renderToString, useState } from "vanic";
+```jsx
+/** @jsx h */
+import { h, renderToString, useState } from "vanic";
 
-const Counter = () => {
-  const [count, setCount] = useState(0);
-
-  return html`
-    <div>
-      <button onclick="${() => setCount(count + 1)}">Click Me</button>
-      <h2>${count}</h2>
-    </div>
-  `;
+const Home = () => {
+  return <h1>Hello Home</h1>
 }
 
-const str = renderToString(Counter);
+const str = renderToString(Home);
 console.log(str);
 // send in the server.
 ```
-### Passing Props
+### Passing props in literals
 ```js
 import { html, render } from "vanic";
 
@@ -125,7 +146,7 @@ render(Home, document.getElementById("app"));
 ```js
 const [state, setState] = useState(0);
 ```
-### UseEffect
+### UseEffect & UseLayoutEffect
 ```js
 useEffect(() => {
   // code
@@ -157,16 +178,16 @@ const count = useRef(0);
 Accesing DOM via useRef
 ```js
 const Home = () => {
-  const input = useRef(() => document.getElementById("input"));
+  const input = useRef(null);
 
-  return html`
-    <div>
-      <input id="input"/>
-      <button onclick="${() => {
-        input.current().focus();
-      }}">Focus Me</button>
-    </div>
-  `;
+  return (
+    <Fragment>
+      <input ref={input}/>
+      <button onClick={() => {
+        input.ref().focus();
+      }}>Focus Me</button>
+    </Fragment>
+  )
 }
 ```
 ### UseContext
@@ -178,13 +199,13 @@ const ThemeContext = createContext();
 const Home = () => {
   const theme = useContext(ThemeContext);
 
-  return html`
-    <h1 style="${{ color: theme.color }}">Hello Home</h1>
-  `;
+  return <h1 style={{ color: theme.color }}>Hello Home</h1>
 };
 
 const App = () => {
-  return ThemeContext.Provider({ color: "red" }, () => Home());
+  return ThemeContext.Provider({ color: "red" }, () => {
+    return <Home/>
+  });
 }
 
 render(App, document.getElementById("app"));
@@ -193,8 +214,9 @@ render(App, document.getElementById("app"));
 Very simple with custom hook.
 
 Example handling input.
-```js
-import { html, render, useState } from "vanic";
+```jsx
+/** @jsx h */
+import { h, render, useState } from "vanic";
 
 // example hook for handling input form.
 const useInput = (initState) => {
@@ -229,13 +251,13 @@ const MyForm = () => {
     resetInput({ name: "", address: "" })
   }
 
-  return html`
-    <form onsubmit="${onSubmit}">
-      <input id="name" value="${input.name}" onchange="${handleInput}" />
-      <input id="address" value="${input.address}" onchange="${handleInput}" />
+  return (
+    <form onSubmit={onSubmit}>
+      <input id="name" value={input.name} onChange={handleInput} />
+      <input id="address" value={input.address} onChange={handleInput} />
       <button type="submit">Submit</button>
     </form>
-  `
+  )
 }
 
 render(MyForm, document.getElementById("app"));
@@ -244,6 +266,6 @@ render(MyForm, document.getElementById("app"));
 Support style with object.
 ```js
 ...
-<div style="${{ backgroundColor: 'red' }}">/* more */</div>
+<div style={{ backgroundColor: 'red' }}>/* more */</div>
 ...
 ```

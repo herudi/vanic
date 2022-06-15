@@ -1,6 +1,6 @@
 import test from 'ava';
-import createApp from './_create_app.js';
-import { render, html, useEffect, useState } from '../src/index.js';
+import createApp from '../_create_app.js';
+import { render, html, useEffect, useState } from '../../src/esm.js';
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -42,9 +42,9 @@ test('simulate useEffect.', async (t) => {
   }
   render(Home, document.getElementById('app'))
   await sleep(3000)
-  const btn = document.querySelector('[c-f="0"]')
+  const btn = document.querySelector('[c-0="0"]')
   btn.click()
   await sleep(1000)
-  t.is(app.innerHTML, `<button c-f="0">Click Me !</button>
+  t.is(app.innerHTML, `<button c-0="0">Click Me !</button>
 <h1>0 1 1 Is Clean</h1>`)
 })

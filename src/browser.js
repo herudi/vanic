@@ -2,6 +2,7 @@ export {
   html,
   render,
   useEffect,
+  useLayoutEffect,
   useState,
   useMemo,
   useRef,

@@ -3,7 +3,7 @@ import { uglify } from "rollup-plugin-uglify";
 import { getBabelOutputPlugin } from '@rollup/plugin-babel';
 import * as fs from "fs";
 
-const VERSION = "0.0.13";
+const VERSION = "0.0.14";
 try {
   fs.rmSync("npm", { recursive: true });
 } catch (error) {/* noop */ }
@@ -19,7 +19,7 @@ fs.writeFileSync("./npm/package.json", JSON.stringify({
   "description": "A small, hook-based library for creating reactive-ui in Vanilla.",
   "main": "index.js",
   "unpkg": "index.min.js",
-  "module": "index.esm.js",
+  "module": "esm.js",
   "types": "index.d.ts",
   "author": "herudi",
   "license": "MIT",
@@ -40,10 +40,10 @@ fs.writeFileSync("./npm/package.json", JSON.stringify({
 }, null, 2), { encoding: "utf-8" });
 const config = [
   {
-    input: "src/index.js",
+    input: "src/esm.js",
     output: [
       { file: 'npm/index.js', format: 'cjs' },
-      { file: 'npm/index.esm.js', format: 'esm' }
+      { file: 'npm/esm.js', format: 'esm' }
     ]
   },
   {

@@ -2,9 +2,11 @@ export type TRet = any;
 export type State<T> = (val: T | ((prev: T) => T)) => void;
 export type Reducer<S, A> = (state: S, action: A) => S;
 export function useEffect(cb: CallableFunction, deps?: TRet[]): void;
+export function useLayoutEffect(cb: CallableFunction, deps?: TRet[]): void;
 export function useState<T>(val: T | ((prev?: TRet) => T)): [T, State<T>];
 export function useRef<T>(initValue: T): {
   current: T;
+  ref: () => T;
 };
 export function useCallback<T extends Function>(cb: T, deps: TRet[]): T;
 export function useMemo<T>(val: () => T, deps?: TRet[]): T;
@@ -15,8 +17,10 @@ export function useReducer<S, A>(
 ): [S, (action: A) => void];
 export function useContext<C>(context: TRet): C;
 export function createContext<D>(defaultVal?: D): {
-  Provider: (value: TRet | undefined, fn: () => string) => TRet;
+  Provider: (value: TRet | undefined, fn: () => TRet) => TRet;
 };
 export function render(fn: (props?: TRet) => TRet, elem: TRet): void;
 export function renderToString(fn: ((props?: TRet) => TRet) | string): string;
 export const html: TRet;
+export const h: TRet;
+export const Fragment: TRet;

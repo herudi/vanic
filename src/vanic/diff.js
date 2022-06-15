@@ -10,7 +10,11 @@ function getAttr(node, attr) {
 }
 function getNodeContent(node, attr) {
   if (attr) {
-    if (attr === "href" || attr === "van-link" || attr.startsWith("c-"))
+    if (
+      attr === "href" ||
+      attr === "van-link" ||
+      (attr[0] === "c" && attr[1] === "-")
+    )
       return getAttr(node, attr);
     if (typeof node[attr] !== "string") return getAttr(node, attr);
     return node[attr];
@@ -53,11 +57,11 @@ export function diff(template, elem) {
           const tplDom = getNodeContent(domNodes[index], attr.name) || "";
           if (tpl !== tplDom) {
             let nm = attr.name;
-            if (nm.startsWith("class")) nm = "className";
-            if (nm.endsWith("for")) nm = "htmlFor";
-            if (nm.startsWith("c-")) {
+            if (nm[0] === "c" && nm[1] === "-") {
               domNodes[index].setAttribute(nm, tpl);
             } else {
+              if (nm === "class") nm = "className";
+              else if (nm === "for") nm = "htmlFor";
               domNodes[index][nm] = tpl;
             }
           }

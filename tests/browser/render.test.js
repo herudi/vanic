@@ -1,5 +1,5 @@
 import test from 'ava';
-import { renderToString, html } from '../src/index.js';
+import { renderToString, html } from '../../src/esm.js';
 
 test('render return as string', t => {
   const Home = () => {
