@@ -176,7 +176,7 @@ function html(ret) {
       start = arr.slice(0, -1).join(" ") + ` ${attr}`;
       val = "";
     }
-    return start + esc(val) + end;
+    return start + String(val) + end;
   });
 }
 
@@ -270,7 +270,7 @@ function useMemo(fn, deps) {
   const cc = hasChange(id, deps);
   if (cc) mems[id] = fn();
   hid++;
-  return mems[id] || fn();
+  return mems[id];
 }
 
 // useCallback
@@ -367,7 +367,9 @@ function h(tag, attr) {
     } else {
       for (let i = arr.length; i--; ) {
         const child = Array.isArray(arr[i]) ? arr[i].join("") : arr[i];
-        str += child[0] !== "<" ? esc(child) : child;
+        if (typeof child === "string") {
+          str += child[0] !== "<" ? esc(child) : child;
+        }
       }
     }
     str += tag ? `</${tag}>` : "";
