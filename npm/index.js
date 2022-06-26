@@ -136,12 +136,15 @@ function _render(fn) {
   diff(elem, reElem);
   if (reRender) {
     const obj = Object.assign({}, primObject);
-    reElem.querySelectorAll('[c-f]').forEach((el) => {
+    const arr = reElem.querySelectorAll('[c-f]');
+    let j = arr.length;
+    while (j--) {
+      const el = arr[j];
       if (el.getAttribute) {
         const attr = el.getAttribute('c-f');
         if (obj[attr]) obj[attr] = undefined;
       }
-    });
+    }
     for (const key in obj) {
       if (obj[key]) cleanEffect(obj[key]);
     }
@@ -153,7 +156,7 @@ function _render(fn) {
     const value = obj.value;
     const key = obj.key.toLowerCase();
     if (key !== 'ref') {
-      const $ = document.querySelector(`[c-${key}="${i}"]`);
+      const $ = reElem.querySelector(`[c-${key}="${i}"]`);
       if ($) {
         if (typeof value === 'object') {
           for (const s in value) $[key][s] = value[s];
@@ -222,8 +225,8 @@ function render(fn, elem) {
   _render(fn);
 }
 const comp = (fn) => {
-  const hook = (__C.hook = { i: 0, e: [], y: [], s: [] });
   const id = hid++;
+  const hook = (__C.hook = { i: 0, e: [], y: [], s: [] });
   function __C(p) {
     curComp = __C;
     hook.i = 0;
