@@ -9,9 +9,9 @@
 
   <!-- script -->
   <script>
-    const { html, render, useState } = Vanic;
+    const { html, render, useState, comp } = Vanic;
 
-    const List = ({ todos, onDelete }) => {
+    const List = comp(({ todos, onDelete }) => {
       return html`
         <div>
           ${todos.map(el => {
@@ -24,9 +24,9 @@
           })}
         </div>
       `
-    }
+    })
 
-    const Todo = () => {
+    const Todo = comp(() => {
       const [todos, setTodos] = useState([]);
       const [todoText, setTodoText] = useState("");
 
@@ -54,7 +54,7 @@
           ${List({ todos, onDelete  })}
         </div>
       `
-    }
+    })
     
     render(Todo, document.getElementById("app"));
   </script>

@@ -2,7 +2,7 @@
 A small, Hook-based library for creating Reactive-UI in Vanilla.
 
 [![ci](https://github.com/herudi/vanic/workflows/ci/badge.svg)](https://github.com/herudi/vanic)
-[![npm version](https://img.shields.io/badge/npm-0.0.15-blue.svg)](https://npmjs.org/package/vanic)
+[![npm version](https://img.shields.io/badge/npm-0.0.16-blue.svg)](https://npmjs.org/package/vanic)
 [![License](https://img.shields.io/:license-mit-blue.svg)](http://badges.mit-license.org)
 [![download-url](https://img.shields.io/npm/dm/vanic.svg)](https://npmjs.org/package/vanic)
 [![gzip](https://img.badgesize.io/https:/unpkg.com/vanic/index.min.js?label=gzip&compression=gzip)](https://github.com/herudi/vanic)
@@ -10,7 +10,6 @@ A small, Hook-based library for creating Reactive-UI in Vanilla.
 ## Features
 - Reactive-UI.
 - Hooks.
-- No compiler and build-tool required.
 - Jsx & literals HTML.
 
 ## Install
@@ -32,7 +31,7 @@ yarn add vanic
 <body>
   ...
   <script type="module">
-    import { html, render } from "https://esm.sh/vanic";
+    import {...} from "https://esm.sh/vanic";
     
     // more code
   </script>
@@ -40,19 +39,17 @@ yarn add vanic
 ```
 ### Deno
 ```ts
-/** @jsx h */
-import { h, render, useState } from "https://deno.land/x/vanic@0.0.15/mod.ts";
+import {...} from "https://deno.land/x/vanic@0.0.16/mod.ts";
 
 // more code
 ```
 ## Usage
 ### Jsx
-> Note: jsx requires build-tools.
 ```jsx
 /** @jsx h */
-import { h, Fragment, render, useState, useEffect } from "vanic";
+import { h, comp, Fragment, render, useState, useEffect } from "vanic";
 
-const Counter = () => {
+const Counter = comp(() => {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
@@ -66,16 +63,16 @@ const Counter = () => {
       <h2>{count}</h2>
     </Fragment>
   )
-}
+})
 
 render(Counter, document.getElementById("app"));
 ```
 ### Literals Html
 
 ```js
-import { html, render, useState, useEffect } from "vanic";
+import { html, render, useState, useEffect, comp } from "vanic";
 
-const Counter = () => {
+const Counter = comp(() => {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
@@ -89,7 +86,7 @@ const Counter = () => {
       <h2>${count}</h2>
     </div>
   `;
-}
+})
 
 render(Counter, document.getElementById("app"));
 ```
@@ -113,11 +110,11 @@ render(Counter, document.getElementById("app"));
 ### Server Side
 ```jsx
 /** @jsx h */
-import { h, renderToString, useState } from "vanic";
+import { h, renderToString, useState, comp } from "vanic";
 
-const Home = () => {
+const Home = comp(() => {
   return <h1>Hello Home</h1>
-}
+})
 
 const str = renderToString(Home);
 console.log(str);
@@ -125,11 +122,11 @@ console.log(str);
 ```
 ### Passing props in literals
 ```js
-import { html, render } from "vanic";
+import { html, render, comp } from "vanic";
 
-const Title = props => html`<h1>${props.text}</h1>`;
+const Title = comp(props => html`<h1>${props.text}</h1>`);
 
-const Home = () => {
+const Home = comp(() => {
 
   return html`
     <div>
@@ -137,7 +134,7 @@ const Home = () => {
       <h2>Welcome</h2>
     </div>
   `;
-}
+})
 
 render(Home, document.getElementById("app"));
 ```
@@ -177,7 +174,7 @@ const count = useRef(0);
 
 Accesing DOM via useRef
 ```js
-const Home = () => {
+const Home = comp(() => {
   const input = useRef(null);
 
   return (
@@ -188,7 +185,7 @@ const Home = () => {
       }}>Focus Me</button>
     </Fragment>
   )
-}
+})
 ```
 ### UseContext
 > Note: `UseContext` different from react.
@@ -196,17 +193,17 @@ const Home = () => {
 
 const ThemeContext = createContext();
 
-const Home = () => {
+const Home = comp(() => {
   const theme = useContext(ThemeContext);
 
   return <h1 style={{ color: theme.color }}>Hello Home</h1>
-};
+});
 
-const App = () => {
+const App = comp(() => {
   return ThemeContext.Provider({ color: "red" }, () => {
     return <Home/>
   });
-}
+})
 
 render(App, document.getElementById("app"));
 ```
@@ -216,10 +213,10 @@ Very simple with custom hook.
 Example handling input.
 ```jsx
 /** @jsx h */
-import { h, render, useState } from "vanic";
+import { h, render, useState, comp } from "vanic";
 
 // example hook for handling input form.
-const useInput = (initState) => {
+const useInput = comp((initState) => {
   const [input, handle] = useState(initState);
   return [
     // object input
@@ -234,9 +231,9 @@ const useInput = (initState) => {
     // reset
     (obj = {}) => handle({ ...input, ...obj })
   ]
-}
+})
 
-const MyForm = () => {
+const MyForm = comp(() => {
   const [input, handleInput, resetInput] = useInput({
     name: "",
     address: ""
@@ -258,7 +255,7 @@ const MyForm = () => {
       <button type="submit">Submit</button>
     </form>
   )
-}
+})
 
 render(MyForm, document.getElementById("app"));
 ```

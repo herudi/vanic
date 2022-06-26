@@ -1,22 +1,24 @@
 // CREDIT & ORIGINAL: https://gomakethings.com/dom-diffing-with-vanilla-js
 // Add diff attribute
-function getNodeType(node) {
-  if (node.nodeType === 3) return "text";
-  if (node.nodeType === 8) return "comment";
-  return node.tagName.toLowerCase();
+const isVanicAttr = (a) => a[0] === 'c' && a[1] === '-';
+function isNotMatch(node, dom) {
+  return (
+    node.nodeType !== dom.nodeType ||
+    node.tagName !== dom.tagName ||
+    node.id !== dom.id ||
+    node.src !== dom.src ||
+    getAttr(node, 'c-f') !== getAttr(dom, 'c-f')
+  );
 }
 function getAttr(node, attr) {
+  if (!node.getAttribute) return '';
   return node.getAttribute(attr);
 }
 function getNodeContent(node, attr) {
   if (attr) {
-    if (
-      attr === "href" ||
-      attr === "van-link" ||
-      (attr[0] === "c" && attr[1] === "-")
-    )
+    if (attr === 'href' || attr === 'van-link' || isVanicAttr(attr))
       return getAttr(node, attr);
-    if (typeof node[attr] !== "string") return getAttr(node, attr);
+    if (typeof node[attr] !== 'string') return getAttr(node, attr);
     return node[attr];
   }
   if (node.childNodes && node.childNodes.length > 0) return null;
@@ -38,36 +40,35 @@ function diff(template, elem) {
       elem.appendChild(node.cloneNode(true));
       return;
     }
-    const type = getNodeType(node);
-    const domType = getNodeType(domNodes[index]);
-    if (type !== domType) {
-      domNodes[index].parentNode.replaceChild(
-        node.cloneNode(true),
-        domNodes[index]
-      );
-      return;
-    }
+
     if (node.attributes && node.attributes.length) {
       let i = 0;
       const len = node.attributes.length;
       while (i < len) {
         const attr = node.attributes[i];
         if (attr.name) {
-          const tpl = getNodeContent(node, attr.name) || "";
-          const tplDom = getNodeContent(domNodes[index], attr.name) || "";
+          const tpl = getNodeContent(node, attr.name) || '';
+          const tplDom = getNodeContent(domNodes[index], attr.name) || '';
           if (tpl !== tplDom) {
             let nm = attr.name;
-            if (nm[0] === "c" && nm[1] === "-") {
+            if (isVanicAttr(nm)) {
               domNodes[index].setAttribute(nm, tpl);
             } else {
-              if (nm === "class") nm = "className";
-              else if (nm === "for") nm = "htmlFor";
+              if (nm === 'class') nm = 'className';
+              else if (nm === 'for') nm = 'htmlFor';
               domNodes[index][nm] = tpl;
             }
           }
         }
         i++;
       }
+    }
+    if (isNotMatch(node, domNodes[index])) {
+      domNodes[index].parentNode.replaceChild(
+        node.cloneNode(true),
+        domNodes[index]
+      );
+      return;
     }
     const templateContent = getNodeContent(node);
     if (
@@ -77,7 +78,7 @@ function diff(template, elem) {
       domNodes[index].textContent = templateContent;
     }
     if (domNodes[index].childNodes.length > 0 && node.childNodes.length < 1) {
-      domNodes[index].innerHTML = "";
+      domNodes[index].innerHTML = '';
       return;
     }
     if (domNodes[index].childNodes.length < 1 && node.childNodes.length > 0) {
@@ -96,53 +97,61 @@ let reRender;
 let reElem;
 let fno = [];
 let rep = {};
+let primObject = {};
 let idx = 0;
-
-// hook var
 let hid = 0;
-let states = [];
-let cleans = [];
-let mems = [];
+let curComp;
 
 function esc(unsafe) {
   return String(unsafe)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
-
 const styleToString = (style) => {
   return Object.keys(style).reduce(
     (acc, key) =>
       acc +
       key
         .split(/(?=[A-Z])/)
-        .join("-")
+        .join('-')
         .toLowerCase() +
-      ":" +
+      ':' +
       style[key] +
-      ";",
-    ""
+      ';',
+    ''
   );
 };
 
 function _render(fn) {
   const res = fn();
-  reRender = fn;
-  const elem = document.createElement("div");
+  const elem = document.createElement('div');
   elem.innerHTML = res;
   diff(elem, reElem);
+  if (reRender) {
+    const obj = Object.assign({}, primObject);
+    reElem.querySelectorAll('[c-f]').forEach((el) => {
+      if (el.getAttribute) {
+        const attr = el.getAttribute('c-f');
+        if (obj[attr]) obj[attr] = undefined;
+      }
+    });
+    for (const key in obj) {
+      if (obj[key]) cleanEffect(obj[key]);
+    }
+  }
+  reRender = fn;
   let i = fno.length;
   while (i--) {
     const obj = fno[i];
     const value = obj.value;
     const key = obj.key.toLowerCase();
-    if (key !== "ref") {
-      const $ = document.querySelector(`[c-${i}="${i}"]`);
+    if (key !== 'ref') {
+      const $ = document.querySelector(`[c-${key}="${i}"]`);
       if ($) {
-        if (typeof value === "object") {
+        if (typeof value === 'object') {
           for (const s in value) $[key][s] = value[s];
         } else {
           $[key] = value;
@@ -150,7 +159,6 @@ function _render(fn) {
       }
     }
   }
-  hid = 0;
   idx = 0;
   fno = [];
 }
@@ -159,37 +167,39 @@ function html(ret) {
   const subs = [].slice.call(arguments, 1);
   return ret.reduce((start, end, no) => {
     let val = subs[no - 1];
-    if (val === null || val === undefined) val = "";
-    if (Array.isArray(val)) val = val.join("");
+    if (val === null || val === undefined) val = '';
+    if (Array.isArray(val)) val = val.join('');
     const type = typeof val;
-    if (type === "function" || type === "boolean" || type === "object") {
+    if (type === 'function' || type === 'boolean' || type === 'object') {
       const arr = start.match(/[^ ]+/g);
       const value = val;
-      const key = (arr[arr.length - 1] || "").replace(/=|"/g, "").toLowerCase();
-      const id = idx++;
-      const attr = `c-${id}="${id}`;
-      if (key === "ref") {
-        val.ref = () => document.querySelector(`[${attr}"]`);
+      const key = (arr[arr.length - 1] || '').replace(/=|"/g, '').toLowerCase();
+      if (!key.includes('>') && !key.includes('<')) {
+        const id = idx++;
+        const attr = `c-${key}="${id}`;
+        if (key === 'ref') {
+          val.ref = () => document.querySelector(`[${attr}"]`);
+        }
+        fno[id] = { key, value };
+        if (type !== 'function') rep[`${attr}"`] = { key, value };
+        start = arr.slice(0, -1).join(' ') + ` ${attr}`;
       }
-      fno[id] = { key, value };
-      if (type !== "function") rep[`${attr}"`] = { key, value };
-      start = arr.slice(0, -1).join(" ") + ` ${attr}`;
-      val = "";
+      val = '';
     }
     return start + String(val) + end;
   });
 }
 
 function renderToString(fn) {
-  return (typeof fn === "string" ? fn : fn()).replace(/ c-.*="\d+"/g, (a) => {
-    const arr = (a || "").split(" ");
-    let str = "";
+  return (typeof fn === 'string' ? fn : fn()).replace(/ c-.*="\d+"/g, (a) => {
+    const arr = (a || '').split(' ');
+    let str = '';
     for (let i = 0; i < arr.length; i++) {
       const ret = rep[arr[i]];
       if (ret) {
         const { key, value } = ret;
         const type = typeof value;
-        if (type === "object" && key !== "ref") {
+        if (type === 'object' && key !== 'ref') {
           str += ` ${key}="${styleToString(value)}"`;
         }
         if (value === true) str += ` ${key}`;
@@ -203,54 +213,89 @@ function render(fn, elem) {
   reRender = undefined;
   fno = [];
   idx = 0;
-  reElem = elem;
   hid = 0;
-  states = [];
-  cleans = [];
-  mems = [];
+  reElem = elem;
   _render(fn);
 }
-
-function hasChange(id, deps) {
-  const hook = states[id];
-  const cc = hook ? deps.some((dep, x) => !Object.is(dep, hook[x])) : true;
-  states[id] = deps;
-  return cc;
-}
+const comp = (fn) => {
+  const hook = (__C.hook = { i: 0, e: [], y: [], s: [] });
+  const id = hid++;
+  function __C(p) {
+    curComp = __C;
+    hook.i = 0;
+    let res = fn(p === undefined ? {} : p);
+    if (typeof res === 'string') {
+      if (!/<.*>/.test(res)) res = `<notag>${res}</notag>`;
+      res = res.replace(/>/, ` c-f="${id}">`);
+      primObject[`${id}`] = curComp;
+    }
+    if (hook.e.length) setTimeout(() => hook.e.splice(0).forEach(invoveEffect));
+    hook.y.splice(0).forEach(invoveEffect);
+    return res;
+  }
+  return __C;
+};
 
 // useState
-function useState(val) {
-  const id = hid;
-  hid++;
-  const def = states[id] === undefined ? val : states[id];
+function useState(value) {
+  const { s, i } = curComp.hook;
+  const val = s[i] === undefined ? value : s[i].val;
+  if (i >= s.length) s.push({ val });
+  curComp.hook.i++;
   return [
-    def,
+    val,
     (newVal) => {
-      states[id] = typeof newVal === "function" ? newVal(def) : newVal;
+      s[i].val = typeof newVal === 'function' ? newVal(val) : newVal;
       _render(reRender);
     },
   ];
 }
 
-// useEffect
-function useEffect(cb, deps) {
-  if (!reElem) return;
-  const id = hid;
-  const cc = hasChange(id, deps);
-  if (cleans[id]) {
-    cleans[id]();
-    cleans.splice(id, 1);
-  }
-  hid++;
-  if (cc) {
-    setTimeout(() => {
-      const fn = cb();
-      if (fn) cleans[id] = fn;
-    });
+const hasChange = (old, next) =>
+  !old || old.length !== next.length || next.some((dep, x) => dep !== old[x]);
+
+function runCleanup(effect) {
+  if (typeof effect.clean === 'function') {
+    effect.clean();
+    effect.clean = undefined;
   }
 }
 
-const useLayoutEffect = useEffect;
+function invoveEffect(effect) {
+  runCleanup(effect);
+  effect.clean = effect.val();
+}
+
+const cleanEffect = (c) => {
+  if (c.hook && c.hook.s) {
+    setTimeout(
+      c.hook.s.forEach((effect) => {
+        runCleanup(effect);
+        effect.sync = true;
+      })
+    );
+  }
+};
+
+const buildEffect = (status) => (val, deps) => {
+  if (!reElem) return;
+  const { i, s, e, y } = curComp.hook;
+  const isOk = i >= s.length;
+  if (isOk) s[i] = { deps, val, sync: false };
+  if (isOk || s[i].sync || hasChange(s[i].deps, deps)) {
+    (status ? e : y).push(s[i]);
+  }
+  s[i].val = val;
+  s[i].deps = deps;
+  s[i].sync = false;
+  curComp.hook.i++;
+};
+
+// useEffect
+const useEffect = buildEffect(true);
+
+// useLayoutEffect
+const useLayoutEffect = buildEffect(false);
 
 // useReducer
 function useReducer(reducer, init, initLazy) {
@@ -266,11 +311,12 @@ function useReducer(reducer, init, initLazy) {
 // useMemo
 function useMemo(fn, deps) {
   if (!reElem) return fn();
-  const id = hid;
-  const cc = hasChange(id, deps);
-  if (cc) mems[id] = fn();
-  hid++;
-  return mems[id];
+  const { i, s } = curComp.hook;
+  if (i >= s.length || hasChange(s[i].deps, deps)) {
+    s[i] = { val: fn(), deps };
+  }
+  curComp.hook.i++;
+  return s[i].val;
 }
 
 // useCallback
@@ -299,16 +345,16 @@ const useContext = (c) => {
 
 // CREDIT & ORIGINAL https://github.com/developit/vhtml
 // Add event, ref and style as object.
-const dangerHTML = "dangerouslySetInnerHTML";
+const dangerHTML = 'dangerouslySetInnerHTML';
 function h(tag, attr) {
   const args = [].slice.call(arguments, 2);
   const arr = [];
-  let str = "";
+  let str = '';
   attr = attr || {};
   for (let i = args.length; i--; ) {
-    arr.push(typeof args[i] === "number" ? String(args[i]) : args[i]);
+    arr.push(typeof args[i] === 'number' ? String(args[i]) : args[i]);
   }
-  if (typeof tag === "function") {
+  if (typeof tag === 'function') {
     attr.children = arr.reverse();
     return tag(attr);
   }
@@ -316,67 +362,69 @@ function h(tag, attr) {
     str += `<${tag}`;
     if (attr) {
       for (let k in attr) {
-        let val = attr[k];
-        const type = typeof val;
-        if (type === "function" || type === "boolean" || type === "object") {
-          const id = idx++;
-          const value = val;
-          const key = k.toLowerCase();
-          if (key === "ref") {
-            val.ref = () => document.querySelector(`[c-${id}="${id}"]`);
+        if (k !== 'children') {
+          let val = attr[k];
+          const type = typeof val;
+          if (type === 'function' || type === 'boolean' || type === 'object') {
+            const value = val;
+            const key = k.toLowerCase();
+            const id = idx++;
+            if (key === 'ref') {
+              val.ref = () => document.querySelector(`[c-${id}="${id}"]`);
+            }
+            fno[id] = { key, value };
+            k = `c-${key}`;
+            val = id;
+            if (type !== 'function') rep[`${k}="${val}"`] = { key, value };
           }
-          fno[id] = { key, value };
-          k = `c-${id}`;
-          val = id;
-          if (type !== "function") rep[`${k}="${val}"`] = { key, value };
-        }
-        if (
-          val !== undefined &&
-          val !== false &&
-          val !== null &&
-          k !== dangerHTML
-        ) {
-          str += ` ${k}="${esc(val)}"`;
+          if (
+            val !== undefined &&
+            val !== false &&
+            val !== null &&
+            k !== dangerHTML
+          ) {
+            str += ` ${k}="${esc(val)}"`;
+          }
         }
       }
     }
-    str += ">";
+    str += '>';
   }
   if (
     [
-      "area",
-      "base",
-      "br",
-      "col",
-      "command",
-      "embed",
-      "hr",
-      "img",
-      "input",
-      "keygen",
-      "link",
-      "meta",
-      "param",
-      "source",
-      "track",
-      "wbr",
+      'area',
+      'base',
+      'br',
+      'col',
+      'command',
+      'embed',
+      'hr',
+      'img',
+      'input',
+      'keygen',
+      'link',
+      'meta',
+      'param',
+      'source',
+      'track',
+      'wbr',
     ].indexOf(tag) === -1
   ) {
     if (attr[dangerHTML]) {
       str += attr[dangerHTML].__html;
     } else {
       for (let i = arr.length; i--; ) {
-        const child = Array.isArray(arr[i]) ? arr[i].join("") : arr[i];
-        if (typeof child === "string") {
-          str += child[0] !== "<" ? esc(child) : child;
+        const child = Array.isArray(arr[i]) ? arr[i].join('') : arr[i];
+        if (typeof child === 'string') {
+          str += child[0] !== '<' ? esc(child) : child;
         }
       }
     }
-    str += tag ? `</${tag}>` : "";
+    str += tag ? `</${tag}>` : '';
   }
   return str;
 }
 
 const Fragment = ({ children }) => h(null, null, children);
 
-export { Fragment, _render, createContext, h, html, render, renderToString, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState };
+export { Fragment, _render, comp, createContext, h, html, render, renderToString, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState };

@@ -1,12 +1,13 @@
 import test from 'ava';
 import createApp from '../_create_app.js';
-import { render, html, useEffect, useState } from '../../src/esm.js';
+import { render, html, useEffect, useState, comp } from '../../src/esm.js';
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 test('simulate useEffect.', async (t) => {
   const app = createApp()
-  const Home = () => {
+  let status = false
+  const Home = comp(() => {
     const [count, setCount] = useState(0)
     const [clean, setClean] = useState('No Clean')
     const [effectCount, setEffectCount] = useState(count)
@@ -19,15 +20,12 @@ test('simulate useEffect.', async (t) => {
 
     useEffect(() => {
       setEffectCount(count)
-    })
+    }, [count])
 
     useEffect(() => {
-      let status = false
-      setTimeout(() => {
-        if (status) {
-          setClean('Is Clean')
-        }
-      }, 1000)
+      if (status) {
+        setClean('Is Clean')
+      }
       setEffectCountDeps(count)
       return () => {
         status = true
@@ -39,12 +37,12 @@ test('simulate useEffect.', async (t) => {
     }
     return html`<button onclick="${click}">Click Me !</button>
 <h1>${effectCountNoDeps} ${effectCount} ${effectCountDeps} ${clean}</h1>`
-  }
+  })
   render(Home, document.getElementById('app'))
-  await sleep(3000)
-  const btn = document.querySelector('[c-0="0"]')
+  await sleep(1000)
+  const btn = document.querySelector('[c-onclick="0"]')
   btn.click()
   await sleep(1000)
-  t.is(app.innerHTML, `<button c-0="0">Click Me !</button>
+  t.is(app.innerHTML, `<button c-onclick="0" c-f="0">Click Me !</button>
 <h1>0 1 1 Is Clean</h1>`)
 })

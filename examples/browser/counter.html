@@ -9,9 +9,9 @@
 
   <!-- script -->
   <script>
-    const { html, render, useState, useEffect } = Vanic;
+    const { html, render, useState, useEffect, comp } = Vanic;
 
-    const Counter = () => {
+    const Counter = comp(() => {
       const [count, setCount] = useState(0);
     
       useEffect(() => {
@@ -26,7 +26,7 @@
           <h2>${count}</h2>
         </div>
       `
-    }
+    })
     
     render(Counter, document.getElementById("app"));
   </script>

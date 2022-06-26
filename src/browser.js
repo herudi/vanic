@@ -3,6 +3,7 @@ export {
   render,
   useEffect,
   useLayoutEffect,
+  comp,
   useState,
   useMemo,
   useRef,
@@ -10,4 +11,4 @@ export {
   useContext,
   useReducer,
   createContext,
-} from "./vanic/index.js";
+} from './vanic/index.js';

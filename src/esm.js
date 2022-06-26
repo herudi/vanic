@@ -1,1 +1,1 @@
-export * from "./vanic/index.js";
+export * from './vanic/index.js';

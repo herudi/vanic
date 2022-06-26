@@ -21,6 +21,7 @@ export function createContext<D>(defaultVal?: D): {
 };
 export function render(fn: (props?: TRet) => TRet, elem: TRet): void;
 export function renderToString(fn: ((props?: TRet) => TRet) | string): string;
+export function comp(component: TRet): TRet;
 export const html: TRet;
 export const h: TRet;
 export const Fragment: TRet;

@@ -6,7 +6,7 @@
   "scripts": {
     "build": "rollup -c",
     "test": "ava",
-    "format": "prettier --write src",
+    "format": "prettier --write --single-quote src",
     "format:check": "prettier --check src"
   },
   "author": "herudi",

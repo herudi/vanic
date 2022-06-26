@@ -13,16 +13,16 @@
   <script>
     const { html, render, useState } = Vanic;
 
-    const useInput = (initState) => {
+    const useInput = comp((initState) => {
       const [input, handle] = useState(initState);
       return [
         input,
         (e) => handle({ ...input, [e.target.id]: e.target.value }),
         (obj = {}) => handle({ ...input, ...obj })
       ]
-    }
+    })
 
-    const MyForm = () => {
+    const MyForm = comp(() => {
       const [input, handleInput, resetInput] = useInput({
         name: "",
         address: ""
@@ -41,7 +41,7 @@
           <button type="submit">Submit</button>
         </form>
       `
-    }
+    })
 
     render(MyForm, document.getElementById("app"));
   </script>
