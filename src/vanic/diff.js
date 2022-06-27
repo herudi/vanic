@@ -52,7 +52,11 @@ export function diff(template, elem) {
           if (tpl !== tplDom) {
             let nm = attr.name;
             if (isVanicAttr(nm)) {
-              domNodes[index].setAttribute(nm, tpl);
+              if (nm !== 'c-f') {
+                if (domNodes[index].setAttribute) {
+                  domNodes[index].setAttribute(nm, tpl);
+                }
+              }
             } else {
               if (nm === 'class') nm = 'className';
               else if (nm === 'for') nm = 'htmlFor';

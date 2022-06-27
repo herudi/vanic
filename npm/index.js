@@ -56,7 +56,11 @@ function diff(template, elem) {
           if (tpl !== tplDom) {
             let nm = attr.name;
             if (isVanicAttr(nm)) {
-              domNodes[index].setAttribute(nm, tpl);
+              if (nm !== 'c-f') {
+                if (domNodes[index].setAttribute) {
+                  domNodes[index].setAttribute(nm, tpl);
+                }
+              }
             } else {
               if (nm === 'class') nm = 'className';
               else if (nm === 'for') nm = 'htmlFor';
@@ -228,6 +232,7 @@ const comp = (fn) => {
   const id = hid++;
   const hook = (__C.hook = { i: 0, e: [], y: [], s: [] });
   function __C(p) {
+    const prev = curComp;
     curComp = __C;
     hook.i = 0;
     let res = fn(p === undefined ? {} : p);
@@ -236,6 +241,7 @@ const comp = (fn) => {
       res = res.replace(/>/, ` c-f="${id}">`);
       primObject[`${id}`] = curComp;
     }
+    if (prev) curComp = prev;
     if (hook.e.length) setTimeout(() => hook.e.splice(0).forEach(invoveEffect));
     hook.y.splice(0).forEach(invoveEffect);
     return res;
