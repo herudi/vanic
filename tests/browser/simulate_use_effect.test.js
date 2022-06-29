@@ -43,6 +43,6 @@ test('simulate useEffect.', async (t) => {
   const btn = document.querySelector('[c-onclick="0"]')
   btn.click()
   await sleep(1000)
-  t.is(app.innerHTML, `<button c-onclick="0" c-f="0">Click Me !</button>
+  t.is(app.innerHTML, `<button c-onclick="0" c-comp="0">Click Me !</button>
 <h1>0 1 1 Is Clean</h1>`)
 })

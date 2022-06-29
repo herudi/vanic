@@ -7,7 +7,7 @@ function isNotMatch(node, dom) {
     node.tagName !== dom.tagName ||
     node.id !== dom.id ||
     node.src !== dom.src ||
-    getAttr(node, 'c-f') !== getAttr(dom, 'c-f')
+    getAttr(node, 'c-comp') !== getAttr(dom, 'c-comp')
   );
 }
 function getAttr(node, attr) {
@@ -16,7 +16,7 @@ function getAttr(node, attr) {
 }
 function getNodeContent(node, attr) {
   if (attr) {
-    if (attr === 'href' || attr === 'van-link' || isVanicAttr(attr))
+    if (attr === 'href' || isVanicAttr(attr))
       return getAttr(node, attr);
     if (typeof node[attr] !== 'string') return getAttr(node, attr);
     return node[attr];
@@ -40,7 +40,6 @@ export function diff(template, elem) {
       elem.appendChild(node.cloneNode(true));
       return;
     }
-
     if (node.attributes && node.attributes.length) {
       let i = 0;
       const len = node.attributes.length;
@@ -52,7 +51,7 @@ export function diff(template, elem) {
           if (tpl !== tplDom) {
             let nm = attr.name;
             if (isVanicAttr(nm)) {
-              if (nm !== 'c-f') {
+              if (nm !== 'c-comp') {
                 if (domNodes[index].setAttribute) {
                   domNodes[index].setAttribute(nm, tpl);
                 }

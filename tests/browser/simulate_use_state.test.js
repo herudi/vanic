@@ -13,6 +13,6 @@ test('simulate useState.', (t) => {
   render(Home, document.getElementById('app'))
   const btn = document.querySelector('[c-onclick="0"]')
   btn.click()
-  t.is(app.innerHTML, `<button c-onclick="0" c-f="0">btn</button>
+  t.is(app.innerHTML, `<button c-onclick="0" c-comp="0">btn</button>
 <h1>1</h1>`)
 })

@@ -3,7 +3,7 @@ import { uglify } from "rollup-plugin-uglify";
 import { getBabelOutputPlugin } from '@rollup/plugin-babel';
 import * as fs from "fs";
 
-const VERSION = "0.0.18";
+const VERSION = "0.0.19";
 try {
   fs.rmSync("npm", { recursive: true });
 } catch (error) {/* noop */ }
@@ -42,8 +42,8 @@ const config = [
   {
     input: "src/esm.js",
     output: [
-      { file: 'npm/index.js', format: 'cjs' },
-      { file: 'npm/esm.js', format: 'esm' }
+      { file: 'npm/index.js', format: 'cjs', plugins: [uglify()] },
+      { file: 'npm/esm.js', format: 'esm', plugins: [uglify()] }
     ]
   },
   {
