@@ -16,8 +16,7 @@ function getAttr(node, attr) {
 }
 function getNodeContent(node, attr) {
   if (attr) {
-    if (attr === 'href' || isVanicAttr(attr))
-      return getAttr(node, attr);
+    if (attr === 'href' || isVanicAttr(attr)) return getAttr(node, attr);
     if (typeof node[attr] !== 'string') return getAttr(node, attr);
     return node[attr];
   }
