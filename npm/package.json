@@ -1,6 +1,6 @@
 {
   "name": "vanic",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "description": "A small, hook-based library for creating reactive-ui in Vanilla.",
   "main": "index.js",
   "unpkg": "index.min.js",
@@ -16,8 +16,9 @@
     "registry": "https://registry.npmjs.org/"
   },
   "keywords": [
+    "Html-attributes framework",
     "Hook in vanillajs",
-    "1kb Reactive-UI vanillajs",
+    "Reactive-UI vanillajs",
     "Tiny jsx for vanilla"
   ],
   "dependencies": {},

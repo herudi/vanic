@@ -1,6 +1,6 @@
 import test from 'ava';
 import createApp from '../_create_app.js';
-import { render, html, comp } from '../../src/esm.js';
+import { render, html, comp } from '../../src/index.js';
 
 test('render with document and add event onclick', t => {
   const app = createApp()

@@ -1,5 +1,5 @@
 import test from 'ava';
-import { renderToString, html, comp } from '../../src/esm.js';
+import { renderToString, html, comp } from '../../src/index.js';
 
 test('render removing all event', t => {
   const Home = comp(() => {

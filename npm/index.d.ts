@@ -1,4 +1,12 @@
 export type TRet = any;
+declare global {
+  export namespace JSX {
+    interface IntrinsicElements {
+      // @ts-ignore
+      [k: string]: TRet;
+    }
+  }
+}
 export type State<T> = (val: T | ((prev: T) => T)) => void;
 export type Reducer<S, A> = (state: S, action: A) => S;
 export function useEffect(cb: CallableFunction, deps?: TRet[]): void;
@@ -22,6 +30,6 @@ export function createContext<D>(defaultVal?: D): {
 export function render(fn: (props?: TRet) => TRet, elem: TRet): void;
 export function renderToString(fn: ((props?: TRet) => TRet) | string): string;
 export function comp(component: TRet): TRet;
+export function h(tag: TRet, ...args: TRet): TRet;
 export const html: TRet;
-export const h: TRet;
 export const Fragment: TRet;

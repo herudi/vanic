@@ -3,7 +3,7 @@ import { uglify } from "rollup-plugin-uglify";
 import { getBabelOutputPlugin } from '@rollup/plugin-babel';
 import * as fs from "fs";
 
-const VERSION = "0.0.19";
+const VERSION = "0.0.20";
 try {
   fs.rmSync("npm", { recursive: true });
 } catch (error) {/* noop */ }
@@ -31,8 +31,9 @@ fs.writeFileSync("./npm/package.json", JSON.stringify({
     "registry": "https://registry.npmjs.org/"
   },
   "keywords": [
+    "Html-attributes framework",
     "Hook in vanillajs",
-    "1kb Reactive-UI vanillajs",
+    "Reactive-UI vanillajs",
     "Tiny jsx for vanilla"
   ],
   "dependencies": {},
@@ -40,7 +41,7 @@ fs.writeFileSync("./npm/package.json", JSON.stringify({
 }, null, 2), { encoding: "utf-8" });
 const config = [
   {
-    input: "src/esm.js",
+    input: "src/index.js",
     output: [
       { file: 'npm/index.js', format: 'cjs', plugins: [uglify()] },
       { file: 'npm/esm.js', format: 'esm', plugins: [uglify()] }

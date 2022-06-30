@@ -1,51 +1,29 @@
+import {
+  filteredArray,
+  hasChange,
+  removeAttributes,
+  escHTML,
+  sto,
+  cleanEffect,
+  invoveEffect,
+  runEffectFromStates,
+} from './utils.js';
 import { diff } from './diff.js';
 
-function filteredArray(arr1, arr2) {
-  const newArr = Object.assign([], arr1);
-  arr2.forEach((v) => {
-    let i = newArr.indexOf(v);
-    if (i >= 0) {
-      newArr.splice(i, 1);
-    }
-  });
-  return newArr;
-}
-const regFindComp = /(?<=c-comp=")(.*?)(?=")/gm;
 let reRender;
 let reElem;
 let fno = [];
 let rep = {};
-let primObject = {};
 let idx = 0;
 let hid = 0;
 let curComp;
+let primIndex = 0;
 let lastRes;
-const sto = setTimeout;
+let lastFn;
+const primObject = {};
+const dangerHTML = 'dangerouslySetInnerHTML';
 
-function esc(unsafe) {
-  return String(unsafe)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-const styleToString = (style) => {
-  return Object.keys(style).reduce(
-    (acc, key) =>
-      acc +
-      key
-        .split(/(?=[A-Z])/)
-        .join('-')
-        .toLowerCase() +
-      ':' +
-      style[key] +
-      ';',
-    ''
-  );
-};
-
-export function _render(fn) {
+function _render(fn) {
   const res = fn();
   const elem = document.createElement('div');
   elem.innerHTML = res;
@@ -68,27 +46,29 @@ export function _render(fn) {
   }
   idx = 0;
   fno = [];
-  const arr = res.match(regFindComp) || [];
-  const initArr = lastRes ? lastRes.match(regFindComp) || [] : arr;
-  lastRes = res;
-  if (reRender && arr.length !== initArr.length) {
-    const effects = filteredArray(arr, initArr);
-    const cleanEffects = filteredArray(initArr, arr);
-    cleanEffects.forEach((k) => {
+  const check = reElem.querySelectorAll('[c-comp]');
+  if (reRender && check.length !== primIndex) {
+    const arr = Array.prototype.map.call(
+      check,
+      (el) => el.getAttribute && el.getAttribute('c-comp')
+    );
+    const initArr = lastRes.match(/(?<=c-comp=")(.*?)(?=")/gm) || [];
+    filteredArray(initArr, arr).forEach((k) => {
       const cmp = primObject[k];
       if (cmp) cleanEffect(cmp);
     });
-    effects.forEach((k) => {
+    filteredArray(arr, initArr).forEach((k) => {
       const cmp = primObject[k];
       if (cmp) {
         const { hook } = cmp;
         hook.y.splice(0);
         hook.e.splice(0);
-        if (hook.s.length)
-          sto(() => hook.s.forEach((effect) => invoveEffect(effect, true)));
+        runEffectFromStates(hook.s, true);
       }
     });
+    primIndex = arr.length;
   }
+  lastRes = res;
   reRender = fn;
 }
 
@@ -120,30 +100,17 @@ export function html(ret) {
 }
 
 export function renderToString(fn) {
-  return (typeof fn === 'string' ? fn : fn()).replace(/ c-.*="\d+"/g, (a) => {
-    const arr = (a || '').split(' ');
-    let str = '';
-    for (let i = 0; i < arr.length; i++) {
-      const ret = rep[arr[i]];
-      if (ret) {
-        const { key, value } = ret;
-        const type = typeof value;
-        if (type === 'object' && key !== 'ref') {
-          str += ` ${key}="${styleToString(value)}"`;
-        }
-        if (value === true) str += ` ${key}`;
-      }
-    }
-    return str;
-  });
+  return removeAttributes(fn, rep);
 }
 
 export function render(fn, elem) {
   reRender = undefined;
+  lastRes = undefined;
   fno = [];
+  rep = {};
   idx = 0;
   reElem = elem;
-  _render(fn);
+  _render(typeof fn === 'function' ? fn : lastFn);
 }
 export const comp = (fn) => {
   const hook = (__C.hook = { i: 0, e: [], y: [], s: [] });
@@ -157,21 +124,32 @@ export const comp = (fn) => {
       if (!/<.*>/.test(res)) res = `<notag>${res}</notag>`;
       res = res.replace(/>/, ` c-comp="${id}">`);
       primObject[`${id}`] = curComp;
+      if (!reRender) primIndex++;
     }
     if (prev) curComp = prev;
+    if (!lastFn) lastFn = curComp;
     if (reRender) {
       if (hook.e.length) sto(() => hook.e.splice(0).forEach(invoveEffect));
-    } else {
-      if (hook.s.length)
-        sto(() => {
-          hook.e.splice(0);
-          hook.s.forEach(invoveEffect);
-        });
-    }
-    if (hook.y.length) hook.y.splice(0).forEach(invoveEffect);
+      if (hook.y.length) hook.y.splice(0).forEach(invoveEffect);
+    } else runEffectFromStates(hook.s);
     return res;
   }
   return __C;
+};
+
+const buildEffect = (status) => (val, deps) => {
+  if (!reElem) return;
+  const { i, s, e, y } = curComp.hook;
+  if (!deps) deps = s.map((el) => el.state).filter(Boolean);
+  const isOk = i >= s.length;
+  if (isOk) s[i] = { deps, val, status };
+  if (reRender && (isOk || hasChange(s[i].deps, deps))) {
+    (status ? e : y).push(s[i]);
+  }
+  s[i].val = val;
+  s[i].deps = deps;
+  s[i].status = status;
+  curComp.hook.i++;
 };
 
 // useState
@@ -186,43 +164,9 @@ export function useState(value) {
       s[i].state = typeof newVal === 'function' ? newVal(state) : newVal;
       _render(reRender);
     },
+    () => s[i].state,
   ];
 }
-
-const hasChange = (old, next) =>
-  !old || old.length !== next.length || next.some((dep, x) => dep !== old[x]);
-
-function runCleanup(effect) {
-  if (typeof effect.clean === 'function') effect.clean();
-}
-
-function invoveEffect(effect, i) {
-  if (typeof i !== 'boolean') {
-    runCleanup(effect);
-    effect.clean = undefined;
-  }
-  if (typeof effect.val === 'function') {
-    sto(() => (effect.clean = effect.val()));
-  }
-}
-
-const cleanEffect = (c) => {
-  if (c.hook) sto(() => c.hook.s.forEach(runCleanup));
-};
-
-const buildEffect = (status) => (val, deps) => {
-  if (!reElem) return;
-  const { i, s, e, y } = curComp.hook;
-  if (!deps) deps = s.map((el) => el.state).filter(Boolean);
-  const isOk = i >= s.length;
-  if (isOk) s[i] = { deps, val };
-  if (isOk || hasChange(s[i].deps, deps)) {
-    (status ? e : y).push(s[i]);
-  }
-  s[i].val = val;
-  s[i].deps = deps;
-  curComp.hook.i++;
-};
 
 // useEffect
 export const useEffect = buildEffect(true);
@@ -254,7 +198,7 @@ export function useMemo(fn, deps) {
 }
 
 // useCallback
-export const useCallback = (cb, deps) => useMemo(() => (p) => cb(p), deps);
+export const useCallback = (cb, deps) => useMemo(() => cb, deps);
 
 // useRef
 export const useRef = (current) =>
@@ -279,7 +223,6 @@ export const useContext = (c) => {
 
 // CREDIT & ORIGINAL https://github.com/developit/vhtml
 // Add event, ref and style as object.
-const dangerHTML = 'dangerouslySetInnerHTML';
 export function h(tag, attr) {
   const args = [].slice.call(arguments, 2);
   const arr = [];
@@ -317,7 +260,7 @@ export function h(tag, attr) {
             val !== null &&
             k !== dangerHTML
           ) {
-            str += ` ${k}="${esc(val)}"`;
+            str += ` ${k}="${escHTML(val)}"`;
           }
         }
       }
@@ -350,7 +293,7 @@ export function h(tag, attr) {
       for (let i = arr.length; i--; ) {
         const child = Array.isArray(arr[i]) ? arr[i].join('') : arr[i];
         if (typeof child === 'string') {
-          str += child[0] !== '<' ? esc(child) : child;
+          str += child[0] !== '<' ? escHTML(child) : child;
         }
       }
     }

@@ -1,14 +1,15 @@
 export {
+  comp,
+  createContext,
   html,
   render,
-  useEffect,
-  useLayoutEffect,
-  comp,
-  useState,
-  useMemo,
-  useRef,
+  Fragment,
   useCallback,
   useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
   useReducer,
-  createContext,
-} from './vanic/index.js';
+  useRef,
+  useState,
+} from './index.js';

@@ -1,2 +1,2 @@
 // @deno-types="./src/index.d.ts"
-export * from "./src/esm.js";
+export * from "./src/index.js";

@@ -36,7 +36,8 @@ export function diff(template, elem) {
   }
   templateNodes.forEach(function (node, index) {
     if (!domNodes[index]) {
-      elem.appendChild(node.cloneNode(true));
+      const newNode = node.cloneNode(true);
+      elem.appendChild(newNode);
       return;
     }
     if (node.attributes && node.attributes.length) {

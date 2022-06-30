@@ -1,6 +1,6 @@
 import test from 'ava';
 import createApp from '../_create_app.js';
-import { render, html, useEffect, useState, comp } from '../../src/esm.js';
+import { render, html, useEffect, useState, comp } from '../../src/index.js';
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 

@@ -1,6 +1,6 @@
 import test from 'ava';
 import createApp from '../_create_app.js';
-import { render, html, useState, comp } from '../../src/esm.js';
+import { render, html, useState, comp } from '../../src/index.js';
 
 test('simulate useState.', (t) => {
   const app = createApp()
