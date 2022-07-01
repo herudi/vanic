@@ -11,7 +11,9 @@ export type State<T> = (val: T | ((prev: T) => T)) => void;
 export type Reducer<S, A> = (state: S, action: A) => S;
 export function useEffect(cb: CallableFunction, deps?: TRet[]): void;
 export function useLayoutEffect(cb: CallableFunction, deps?: TRet[]): void;
-export function useState<T>(val: T | ((prev?: TRet) => T)): [T, State<T>];
+export function useState<T>(
+  val: T | ((prev?: TRet) => T)
+): [T, State<T>, () => T];
 export function useRef<T>(initValue: T): {
   current: T;
   ref: () => T;

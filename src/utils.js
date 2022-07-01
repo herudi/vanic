@@ -1,5 +1,7 @@
 export const sto = setTimeout;
 
+export const isFunc = (val) => typeof val === 'function';
+
 export function filteredArray(arr1, arr2) {
   const newArr = Object.assign([], arr1);
   let i = 0;
@@ -61,7 +63,7 @@ export function hasChange(old, next) {
 }
 
 function runCleanup(effect) {
-  if (typeof effect.clean === 'function') effect.clean();
+  if (isFunc(effect.clean)) effect.clean();
 }
 
 export function invoveEffect(effect, i) {
@@ -69,7 +71,7 @@ export function invoveEffect(effect, i) {
     runCleanup(effect);
     effect.clean = undefined;
   }
-  if (typeof effect.val === 'function') {
+  if (isFunc(effect.val)) {
     sto(() => (effect.clean = effect.val()));
   }
 }

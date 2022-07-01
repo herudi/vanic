@@ -3,7 +3,6 @@ export {
   createContext,
   html,
   render,
-  Fragment,
   useCallback,
   useContext,
   useEffect,

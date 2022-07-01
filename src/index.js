@@ -7,6 +7,7 @@ import {
   cleanEffect,
   invoveEffect,
   runEffectFromStates,
+  isFunc,
 } from './utils.js';
 import { diff } from './diff.js';
 
@@ -19,7 +20,6 @@ let hid = 0;
 let curComp;
 let primIndex = 0;
 let lastRes;
-let lastFn;
 const primObject = {};
 const dangerHTML = 'dangerouslySetInnerHTML';
 
@@ -110,7 +110,7 @@ export function render(fn, elem) {
   rep = {};
   idx = 0;
   reElem = elem;
-  _render(typeof fn === 'function' ? fn : lastFn);
+  _render(fn);
 }
 export const comp = (fn) => {
   const hook = (__C.hook = { i: 0, e: [], y: [], s: [] });
@@ -127,7 +127,6 @@ export const comp = (fn) => {
       if (!reRender) primIndex++;
     }
     if (prev) curComp = prev;
-    if (!lastFn) lastFn = curComp;
     if (reRender) {
       if (hook.e.length) sto(() => hook.e.splice(0).forEach(invoveEffect));
       if (hook.y.length) hook.y.splice(0).forEach(invoveEffect);
@@ -161,7 +160,7 @@ export function useState(value) {
   return [
     state,
     (newVal) => {
-      s[i].state = typeof newVal === 'function' ? newVal(state) : newVal;
+      s[i].state = isFunc(newVal) ? newVal(state) : newVal;
       _render(reRender);
     },
     () => s[i].state,
@@ -231,7 +230,7 @@ export function h(tag, attr) {
   for (let i = args.length; i--; ) {
     arr.push(typeof args[i] === 'number' ? String(args[i]) : args[i]);
   }
-  if (typeof tag === 'function') {
+  if (isFunc(tag)) {
     attr.children = arr.reverse();
     return tag(attr);
   }
@@ -302,4 +301,4 @@ export function h(tag, attr) {
   return str;
 }
 
-export const Fragment = ({ children }) => html(null, null, children);
+export const Fragment = ({ children }) => h(null, null, children);
