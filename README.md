@@ -17,10 +17,9 @@ Vanic is an `html-attribute` first.
 - Jsx & literals HTML.
 
 ## Examples
-- [Clock](https://codesandbox.io/s/vanic-clock-j10svs?file=/src/index.jsx)
 - [Counter](https://codesandbox.io/s/vanic-counter-9oc5r9?file=/src/index.jsx)
 - [Todo App](https://codesandbox.io/s/vanic-todo-app-7e84xy?file=/src/index.jsx)
-- [With Router](https://codesandbox.io/s/vanic-wit-router-j10svs?file=/src/index.jsx)
+- [With Router](https://codesandbox.io/s/vanic-with-router-j10svs?file=/src/index.jsx)
 
 ## Html-Attribute First
 In vanic, component or event and more will convert to `html-attribute`.
