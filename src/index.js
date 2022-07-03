@@ -3,11 +3,10 @@ import {
   hasChange,
   removeAttributes,
   escHTML,
-  sto,
   cleanEffect,
-  invoveEffect,
   runEffectFromStates,
   isFunc,
+  findParent,
 } from './utils.js';
 import { diff } from './diff.js';
 
@@ -22,8 +21,9 @@ let primIndex = 0;
 let lastRes;
 const primObject = {};
 const dangerHTML = 'dangerouslySetInnerHTML';
+const mapElem = Array.prototype.map;
 
-function _render(fn) {
+function _render(fn, c) {
   const res = fn();
   const elem = document.createElement('div');
   elem.innerHTML = res;
@@ -47,8 +47,9 @@ function _render(fn) {
   idx = 0;
   fno = [];
   const check = reElem.querySelectorAll('[c-comp]');
+  let iRuns = [];
   if (reRender && check.length !== primIndex) {
-    const arr = Array.prototype.map.call(
+    const arr = mapElem.call(
       check,
       (el) => el.getAttribute && el.getAttribute('c-comp')
     );
@@ -57,18 +58,31 @@ function _render(fn) {
       const cmp = primObject[k];
       if (cmp) cleanEffect(cmp);
     });
-    filteredArray(arr, initArr).forEach((k) => {
+    iRuns = filteredArray(arr, initArr);
+    iRuns.forEach((k) => {
       const cmp = primObject[k];
-      if (cmp) {
-        const { hook } = cmp;
-        hook.y.splice(0);
-        hook.e.splice(0);
-        runEffectFromStates(hook.s, true);
-      }
+      if (cmp) runEffectFromStates(cmp.hook, true, true);
     });
     primIndex = arr.length;
   }
   lastRes = res;
+  if (c) {
+    const elem = reElem.querySelector(`[c-comp="${c}"]`);
+    const elems = elem.querySelectorAll(`[c-comp]`) || [];
+    let keys = mapElem
+      .call(elems, (el) => {
+        if (findParent(el) === c)
+          return el.getAttribute && el.getAttribute('c-comp');
+        return null;
+      })
+      .concat([c])
+      .filter(Boolean);
+    if (iRuns.length) keys = filteredArray(keys, iRuns);
+    keys.forEach((k) => {
+      const cmp = primObject[k];
+      if (cmp) runEffectFromStates(cmp.hook);
+    });
+  }
   reRender = fn;
 }
 
@@ -83,16 +97,14 @@ export function html(ret) {
       const arr = start.match(/[^ ]+/g);
       const value = val;
       const key = (arr[arr.length - 1] || '').replace(/=|"/g, '').toLowerCase();
-      if (!/<|>/.test(key)) {
-        const id = idx++;
-        const attr = `c-${key}="${id}`;
-        if (key === 'ref') {
-          val.ref = () => document.querySelector(`[${attr}"]`);
-        }
-        fno[id] = { key, value };
-        if (type !== 'function') rep[`${attr}"`] = { key, value };
-        start = arr.slice(0, -1).join(' ') + ` ${attr}`;
+      const id = idx++;
+      const attr = `c-${key}="${id}`;
+      if (key === 'ref') {
+        val.ref = () => reElem.querySelector(`[${attr}"]`);
       }
+      fno[id] = { key, value };
+      if (type !== 'function') rep[`${attr}"`] = { key, value };
+      start = arr.slice(0, -1).join(' ') + ` ${attr}`;
       val = '';
     }
     return start + String(val) + end;
@@ -113,8 +125,8 @@ export function render(fn, elem) {
   _render(fn);
 }
 export const comp = (fn) => {
-  const hook = (__C.hook = { i: 0, e: [], y: [], s: [] });
   const id = hid++;
+  const hook = (__C.hook = { i: 0, s: [], c: '' + id });
   function __C(p) {
     const prev = curComp;
     curComp = __C;
@@ -127,10 +139,7 @@ export const comp = (fn) => {
       if (!reRender) primIndex++;
     }
     if (prev) curComp = prev;
-    if (reRender) {
-      if (hook.e.length) sto(() => hook.e.splice(0).forEach(invoveEffect));
-      if (hook.y.length) hook.y.splice(0).forEach(invoveEffect);
-    } else runEffectFromStates(hook.s);
+    if (!reRender) runEffectFromStates(hook, void 0, true, true);
     return res;
   }
   return __C;
@@ -138,32 +147,27 @@ export const comp = (fn) => {
 
 const buildEffect = (status) => (val, deps) => {
   if (!reElem) return;
-  const { i, s, e, y } = curComp.hook;
-  if (!deps) deps = s.map((el) => el.state).filter(Boolean);
-  const isOk = i >= s.length;
-  if (isOk) s[i] = { deps, val, status };
-  if (reRender && (isOk || hasChange(s[i].deps, deps))) {
-    (status ? e : y).push(s[i]);
-  }
-  s[i].val = val;
-  s[i].deps = deps;
-  s[i].status = status;
+  const { i, s } = curComp.hook;
+  if (i >= s.length) s[i] = { d: deps, v: val, s: status };
+  s[i].v = val;
+  s[i].d = deps;
+  s[i].s = status;
   curComp.hook.i++;
 };
 
 // useState
 export function useState(value) {
-  const { s, i } = curComp.hook;
-  const state = s[i] === undefined ? value : s[i].state;
-  if (i >= s.length) s.push({ state });
+  const { s, i, c } = curComp.hook;
+  const st = s[i] === undefined ? value : s[i].st;
+  if (i >= s.length) s.push({ st });
   curComp.hook.i++;
   return [
-    state,
+    st,
     (newVal) => {
-      s[i].state = isFunc(newVal) ? newVal(state) : newVal;
-      _render(reRender);
+      s[i].st = isFunc(newVal) ? newVal(st) : newVal;
+      _render(reRender, c);
     },
-    () => s[i].state,
+    () => s[i].st,
   ];
 }
 
@@ -188,12 +192,11 @@ export function useReducer(reducer, init, initLazy) {
 export function useMemo(fn, deps) {
   if (!reElem) return fn();
   const { i, s } = curComp.hook;
-  if (!deps) deps = s.map((el) => el.state).filter(Boolean);
-  if (i >= s.length || hasChange(s[i].deps, deps)) {
-    s[i] = { val: fn(), deps };
+  if (i >= s.length || hasChange(s[i].d, deps)) {
+    s[i] = { v: fn(), d: deps };
   }
   curComp.hook.i++;
-  return s[i].val;
+  return s[i].v;
 }
 
 // useCallback
@@ -246,7 +249,7 @@ export function h(tag, attr) {
             const key = k.toLowerCase();
             const id = idx++;
             if (key === 'ref') {
-              val.ref = () => document.querySelector(`[c-${id}="${id}"]`);
+              val.ref = () => reElem.querySelector(`[c-${key}="${id}"]`);
             }
             fno[id] = { key, value };
             k = `c-${key}`;

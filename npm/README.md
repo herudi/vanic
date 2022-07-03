@@ -2,8 +2,10 @@
 
 A small, Hook-based library for creating Reactive-UI in Vanilla.
 
+Vanic is an `html-attribute` first.
+
 [![ci](https://github.com/herudi/vanic/workflows/ci/badge.svg)](https://github.com/herudi/vanic)
-[![npm version](https://img.shields.io/badge/npm-0.0.21-blue.svg)](https://npmjs.org/package/vanic)
+[![npm version](https://img.shields.io/badge/npm-0.0.22-blue.svg)](https://npmjs.org/package/vanic)
 [![License](https://img.shields.io/:license-mit-blue.svg)](http://badges.mit-license.org)
 [![download-url](https://img.shields.io/npm/dm/vanic.svg)](https://npmjs.org/package/vanic)
 [![gzip](https://img.badgesize.io/https:/unpkg.com/vanic/index.min.js?label=gzip&compression=gzip)](https://github.com/herudi/vanic)
@@ -13,6 +15,56 @@ A small, Hook-based library for creating Reactive-UI in Vanilla.
 - Reactive-UI.
 - Hooks.
 - Jsx & literals HTML.
+
+## Examples
+- [Counter](https://codesandbox.io/s/vanic-counter-9oc5r9?file=/src/index.jsx)
+- [Todo App](https://codesandbox.io/s/vanic-todo-app-7e84xy?file=/src/index.jsx)
+- [With Router](https://codesandbox.io/s/vanic-with-router-j10svs?file=/src/index.jsx)
+
+## Html-Attribute First
+In vanic, component or event and more will convert to `html-attribute`.
+
+```jsx
+
+// component 1
+const Title = comp(({ children }) => <h1>{children}</h1>);
+
+// parent component
+const App = comp(() => {
+  return (
+    <div>
+      <h1>Hello Vanic</h1>
+      <Title>Hello Title</Title>
+      <button onClick={() => console.log('hello')}>Click Me</button>
+    </div>
+  )
+});
+
+render(App, document.getElementById("app"));
+
+Output is :
+// parent
+<div c-comp="2">
+  <h1>Hello Vanic</h1>
+
+  // component 1
+  <h1 c-comp="1">Hello Title</h1>
+
+  // event onclick
+  <button c-onclick="0">Click Me</button>
+</div>
+
+Will be remove if ssr :
+const str = renderToString(App);
+// send str on the server-side
+
+After render :
+<div>
+  <h1>Hello Vanic</h1>
+  <h1>Hello Title</h1>
+  <button>Click Me</button>
+</div>
+```
 
 ## Install
 
@@ -49,7 +101,7 @@ yarn add vanic
 ### Deno
 
 ```ts
-import {...} from "https://deno.land/x/vanic@0.0.21/mod.ts";
+import {...} from "https://deno.land/x/vanic@0.0.22/mod.ts";
 
 // more code
 ```

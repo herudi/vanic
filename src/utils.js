@@ -57,22 +57,35 @@ export function removeAttributes(fn, rep) {
 }
 
 export function hasChange(old, next) {
-  return (
-    !old || old.length !== next.length || next.some((dep, x) => dep !== old[x])
-  );
+  return !old || next.some((dep, x) => dep !== old[x]);
 }
 
 function runCleanup(effect) {
-  if (isFunc(effect.clean)) effect.clean();
+  if (isFunc(effect.c)) effect.c();
 }
 
-export function invoveEffect(effect, i) {
-  if (typeof i !== 'boolean') {
-    runCleanup(effect);
-    effect.clean = undefined;
+export function findParent(elem) {
+  if (elem.tagName === 'BODY' || !elem.parentNode) return null;
+  const p = elem.parentNode;
+  if (p && p.getAttribute) {
+    const attr = p.getAttribute('c-comp');
+    if (attr) return attr;
   }
-  if (isFunc(effect.val)) {
-    sto(() => (effect.clean = effect.val()));
+  return findParent(p);
+}
+
+export function invoveEffect(effect, status, makeSto, force) {
+  const hc = effect._d ? hasChange(effect.d, effect._d) : true;
+  effect._d = effect.d;
+  if (force || status || hc) {
+    if (!status) {
+      runCleanup(effect);
+      effect.c = undefined;
+    }
+    if (isFunc(effect.v)) {
+      if (makeSto) sto(() => (effect.c = effect.v()));
+      else effect.c = effect.v();
+    }
   }
 }
 
@@ -80,13 +93,21 @@ export function cleanEffect(c) {
   if (c.hook) sto(() => c.hook.s.forEach(runCleanup));
 }
 
-export function runEffectFromStates(arr, status) {
-  if (arr.length) {
-    const effects = arr.filter((el) => el.status === true);
-    const layoutEffects = arr.filter((el) => el.status === false);
-    if (effects.length)
-      sto(() => effects.forEach((effect) => invoveEffect(effect, status)));
-    if (layoutEffects.length)
-      layoutEffects.forEach((effect) => invoveEffect(effect, status));
+export function runEffectFromStates(hook, status, makeSto, force) {
+  const arr = hook.s,
+    len = arr.length;
+  let i = 0;
+  if (len) {
+    const effects = [];
+    const layoutEffects = [];
+    const makeEffect = (effect) => invoveEffect(effect, status, makeSto, force);
+    while (i < len) {
+      const s = arr[i];
+      if (s.s === true) effects.push(s);
+      else if (s.s === false) layoutEffects.push(s);
+      i++;
+    }
+    if (effects.length) sto(() => effects.forEach(makeEffect));
+    layoutEffects.forEach(makeEffect);
   }
 }
