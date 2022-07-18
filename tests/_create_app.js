@@ -8,4 +8,4 @@ function createApp() {
   return app
 }
 
-export default createApp;
+module.exports = createApp;

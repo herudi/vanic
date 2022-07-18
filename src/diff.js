@@ -1,14 +1,11 @@
 // CREDIT & ORIGINAL: https://gomakethings.com/dom-diffing-with-vanilla-js
 // Add diff attribute
-const isVanicAttr = (a) => a[0] === 'c' && a[1] === '-';
-function isNotMatch(node, dom) {
-  return (
-    node.nodeType !== dom.nodeType ||
-    node.tagName !== dom.tagName ||
-    node.id !== dom.id ||
-    node.src !== dom.src ||
-    getAttr(node, 'c-comp') !== getAttr(dom, 'c-comp')
-  );
+function withTry(cb) {
+  try {
+    cb();
+  } catch (_e) {
+    /* noop */
+  }
 }
 function getAttr(node, attr) {
   if (!node.getAttribute) return '';
@@ -16,7 +13,8 @@ function getAttr(node, attr) {
 }
 function getNodeContent(node, attr) {
   if (attr) {
-    if (attr === 'href' || isVanicAttr(attr)) return getAttr(node, attr);
+    if (attr === 'href' || (attr[0] === 'c' && attr[1] === '-'))
+      return getAttr(node, attr);
     if (typeof node[attr] !== 'string') return getAttr(node, attr);
     return node[attr];
   }
@@ -24,8 +22,8 @@ function getNodeContent(node, attr) {
   return node.textContent;
 }
 export function diff(template, elem) {
-  const domNodes = Array.prototype.slice.call(elem.childNodes);
-  const templateNodes = Array.prototype.slice.call(template.childNodes);
+  const domNodes = elem.childNodes;
+  const templateNodes = template.childNodes;
   let count = domNodes.length - templateNodes.length;
   if (count > 0) {
     for (; count > 0; count--) {
@@ -34,7 +32,7 @@ export function diff(template, elem) {
       );
     }
   }
-  templateNodes.forEach(function (node, index) {
+  templateNodes.forEach((node, index) => {
     if (!domNodes[index]) {
       const newNode = node.cloneNode(true);
       elem.appendChild(newNode);
@@ -50,23 +48,20 @@ export function diff(template, elem) {
           const tplDom = getNodeContent(domNodes[index], attr.name) || '';
           if (tpl !== tplDom) {
             let nm = attr.name;
-            if (isVanicAttr(nm)) {
-              if (nm !== 'c-comp') {
-                if (domNodes[index].setAttribute) {
-                  domNodes[index].setAttribute(nm, tpl);
-                }
-              }
-            } else {
-              if (nm === 'class') nm = 'className';
-              else if (nm === 'for') nm = 'htmlFor';
-              domNodes[index][nm] = tpl;
-            }
+            if (nm === 'class') nm = 'className';
+            else if (nm === 'for') nm = 'htmlFor';
+            withTry(() => domNodes[index].setAttribute(nm, tpl));
+            withTry(() => (domNodes[index][nm] = tpl));
           }
         }
         i++;
       }
     }
-    if (isNotMatch(node, domNodes[index])) {
+    if (
+      node.nodeType !== domNodes[index].nodeType ||
+      node.tagName !== domNodes[index].tagName ||
+      getAttr(node, 'c-comp') !== getAttr(domNodes[index], 'c-comp')
+    ) {
       domNodes[index].parentNode.replaceChild(
         node.cloneNode(true),
         domNodes[index]

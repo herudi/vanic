@@ -26,12 +26,10 @@ export function useReducer<S, A>(
   initLazy?: (initState: S) => TRet
 ): [S, (action: A) => void];
 export function useContext<C>(context: TRet): C;
-export function createContext<D>(defaultVal?: D): {
-  Provider: (value: TRet | undefined, fn: () => TRet) => TRet;
+export function createContext<D>(initial?: D): {
+  Provider: (props: TRet) => TRet;
 };
-export function render(fn: (props?: TRet) => TRet, elem: TRet): void;
-export function renderToString(fn: ((props?: TRet) => TRet) | string): string;
-export function comp(component: TRet): TRet;
+export function render(component: TRet, elem: TRet): void;
+export function renderToString(component: TRet): string;
 export function h(tag: TRet, ...args: TRet): TRet;
-export const html: TRet;
 export const Fragment: TRet;

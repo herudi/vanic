@@ -1,9 +1,8 @@
 import { terser } from "rollup-plugin-terser";
-import { uglify } from "rollup-plugin-uglify";
 import { getBabelOutputPlugin } from '@rollup/plugin-babel';
 import * as fs from "fs";
 
-const VERSION = "0.0.22";
+const VERSION = "0.0.23";
 try {
   fs.rmSync("npm", { recursive: true });
 } catch (error) {/* noop */ }
@@ -43,12 +42,12 @@ const config = [
   {
     input: "src/index.js",
     output: [
-      { file: 'npm/index.js', format: 'cjs', plugins: [uglify()] },
-      { file: 'npm/esm.js', format: 'esm', plugins: [uglify()] }
+      { file: 'npm/index.js', format: 'cjs', plugins: [terser()] },
+      { file: 'npm/esm.js', format: 'esm', plugins: [terser()] }
     ]
   },
   {
-    input: 'src/browser.js',
+    input: 'src/index.js',
     output: [
       {
         sourcemap: true,
@@ -56,7 +55,6 @@ const config = [
         format: 'iife',
         name: 'Vanic',
         plugins: [
-          terser(),
           getBabelOutputPlugin({
             allowAllFormats: true,
             presets: [
@@ -68,7 +66,7 @@ const config = [
               ]
             ]
           }),
-          uglify()
+          terser()
         ]
       }
     ]
