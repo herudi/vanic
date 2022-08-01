@@ -7,7 +7,7 @@ const app = createApp();
 
 const Hello = () => <h1>hello</h1>;
 
-test('render', t => {
+test('with doc', t => {
   render(<Hello/>, document.getElementById('app'));
-  t.is(app.innerHTML, '<h1 c-comp="0-hello">hello</h1>');
+  t.is(app.innerHTML, '<h1>hello</h1>');
 });

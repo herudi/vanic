@@ -24,7 +24,7 @@ const Hello = () => {
   )
 }
 
-test('render', async t => {
+test('useState', async t => {
   render(<Hello />, document.getElementById('app'));
   const btn = document.querySelector('button');
   btn.click();

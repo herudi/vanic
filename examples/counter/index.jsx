@@ -18,4 +18,4 @@ const Counter = () => {
   )
 }
 
-render(Counter, document.getElementById("app"));
+render(<Counter/>, document.getElementById("app"));

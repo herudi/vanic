@@ -4,7 +4,7 @@ const test = require("ava");
 
 const Hello = () => <h1>hello</h1>;
 
-test('render', t => {
+test('render to string', t => {
 	const str = renderToString(<Hello/>)
   t.is(str, '<h1>hello</h1>')
 });

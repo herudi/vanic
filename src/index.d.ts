@@ -31,5 +31,7 @@ export function createContext<D>(initial?: D): {
 };
 export function render(component: TRet, elem: TRet): void;
 export function renderToString(component: TRet): string;
+export function isValidElement(element: TRet): boolean;
 export function h(tag: TRet, ...args: TRet): TRet;
+export const html: TRet;
 export const Fragment: TRet;

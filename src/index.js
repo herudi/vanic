@@ -3,47 +3,50 @@ import { diff } from './diff.js';
 let reRender;
 let reElem;
 let fno = [];
-let primeObj = {};
 let idx = 0;
 let cid = 0;
+let fidx = 0;
 let firsts = [];
 let lasts = [];
 let curHook;
+let curComp = {};
 const dangerHTML = 'dangerouslySetInnerHTML';
-const sto = setTimeout;
 const isFunc = (val) => typeof val === 'function';
 const getSelector = (key, id) => reElem.querySelector(`[c-${key}="${id}"]`);
 const hasChange = (old, next) => !old || next.some((dep, x) => dep !== old[x]);
+const hasContext = () => curHook && curHook.t.length;
 
 function runEffect(hook) {
   if (hook) {
     hook.y.splice(0).forEach(invokeEffect);
-    if (hook.e.length) sto(() => hook.e.splice(0).forEach(invokeEffect));
+    if (hook.e.length) setTimeout(() => hook.e.splice(0).forEach(invokeEffect));
   }
+}
+
+export function isValidElement(elem) {
+  return typeof elem === 'object' && elem.__c && elem.comp && elem.props;
 }
 
 export function renderToString(child) {
   if (isFunc(child)) child = child();
-  if (child === undefined) return child;
+  if (typeof child !== 'object' || child === null) return child;
   const toArray = (res) => {
     const arr = [];
     for (let i = 0; i < res.length; i++) {
       arr.push(renderToString(res[i]));
     }
+    if (hasContext()) curHook.t = [];
     return arr.flat().join('');
   };
   if (Array.isArray(child)) return toArray(child);
-  if (typeof child === 'string') return child;
-  // const runComp =
-  //   child.comp.name === 'Fragment' || child.comp.name === 'Provider' ? child.comp : comp(child.comp);
+  if (!child.__c) return child;
   const res = comp(child.comp)(child.props);
   if (res.__c) return renderToString(res);
   if (Array.isArray(res)) return toArray(res);
   return res;
 }
-
-function _render(fn, c) {
-  const res = comp(fn.comp)(fn.props);
+function _render(fn) {
+  const res = comp(fn.comp ? fn.comp : fn)(fn.props || {});
   const elem = document.createElement('div');
   elem.innerHTML = res;
   diff(elem, reElem);
@@ -54,25 +57,21 @@ function _render(fn, c) {
       if ($) $[key] = value;
     }
   });
-  lasts.forEach(
-    (k) =>
-      firsts.indexOf(k) === -1 &&
-      primeObj[k].s.forEach((e) => runCleanup(e, true))
-  );
-  firsts.forEach((k) => {
-    if (c) {
-      if (c[0] <= k[0]) runEffect(primeObj[k]);
-      else {
-        primeObj[k].e.splice(0);
-        primeObj[k].y.splice(0);
-      }
-    } else runEffect(primeObj[k]);
+  const mapFirsts = firsts.map((el) => el.c);
+  lasts.forEach((o) => {
+    if (mapFirsts.indexOf(o.c) === -1 && curComp[o.c]) {
+      curComp[o.c].s.forEach((e) => runCleanup(e, true));
+      curComp[o.c] = void 0;
+    }
   });
-  idx = 0;
-  cid = 0;
+  firsts.forEach((o) => {
+    runEffect(curComp[o.c]);
+    o.fn.i = 0;
+  });
   lasts = firsts;
   firsts = [];
   fno = [];
+  idx = 0;
   reRender = fn;
 }
 
@@ -91,33 +90,38 @@ function invokeEffect(effect) {
 export function render(fn, elem) {
   curHook = undefined;
   reRender = undefined;
-  primeObj = {};
+  curComp = {};
   lasts = [];
   firsts = [];
   fno = [];
   idx = 0;
   cid = 0;
+  fidx = 0;
   reElem = elem;
-  _render(fn.__c ? fn : h(fn));
+  _render(fn);
 }
 
-const buildEffect = (status) => (val, deps) => {
-  if (!reElem) return;
+const buildCallback = (status, isMemo) => (val, deps) => {
+  if (!reElem) return isMemo ? val() : void 0;
   const { i, s, e, y } = curHook;
+  // skip every render.
+  if (!deps) deps = s.map((el) => el.st).filter((el) => el !== undefined);
   const isFirst = i >= s.length;
   if (isFirst) s[i] = { d: deps, v: val, f: false };
   if (isFirst || s[i].f || hasChange(s[i].d, deps)) {
-    (status ? e : y).push(s[i]);
+    if (isMemo) s[i] = { v: val(), d: deps };
+    else (status ? e : y).push(s[i]);
   }
+  curHook.i++;
+  if (isMemo) return s[i].v;
   s[i].v = val;
   s[i].d = deps;
   s[i].f = false;
-  curHook.i++;
 };
 
 // useState
 export function useState(value) {
-  const { s, i, c } = curHook;
+  const { s, i } = curHook;
   const st = s[i] === undefined ? value : s[i].st;
   if (i >= s.length) s.push({ st });
   curHook.i++;
@@ -125,7 +129,7 @@ export function useState(value) {
     st,
     (newVal) => {
       s[i].st = isFunc(newVal) ? newVal(st) : newVal;
-      _render(reRender, c);
+      _render(reRender);
     },
     () => s[i].st,
   ];
@@ -138,21 +142,13 @@ export function useReducer(reducer, init, initLazy) {
 }
 
 // useEffect
-export const useEffect = buildEffect(true);
+export const useEffect = buildCallback(1);
 
 // useLayoutEffect
-export const useLayoutEffect = buildEffect(false);
+export const useLayoutEffect = buildCallback(0);
 
 // useMemo
-export function useMemo(fn, deps) {
-  if (!reElem) return fn();
-  const { i, s } = curHook;
-  if (i >= s.length || !deps || hasChange(s[i].d, deps)) {
-    s[i] = { v: fn(), d: deps };
-  }
-  curHook.i++;
-  return s[i].v;
-}
+export const useMemo = buildCallback(1, 1);
 
 // useCallback
 export const useCallback = (cb, deps) => useMemo(() => cb, deps);
@@ -163,129 +159,137 @@ export const useRef = (current) =>
 
 // createContext
 export const createContext = (init) => {
-  let val;
+  const i = cid++;
   return {
     Provider({ value, children }) {
-      val = value !== undefined ? value : init;
+      if (curHook) curHook.t[i] = value !== undefined ? value : init;
       return children;
     },
-    v: () => val,
+    i,
   };
 };
 
 // useContext
-export const useContext = (c) => c.v();
-
-function comp(fn) {
-  const c = cid++ + '-' + (fn.name || 'main').toLowerCase();
-  const init = primeObj[c] || { s: [], i: 0, e: [], y: [], c };
-  function _C(p) {
-    curHook = init;
-    curHook.i = 0;
-    let res = fn(p);
-    if (res.__c) res = renderToString(res);
-    if (typeof res === 'string' && reElem !== undefined) {
-      res = res.replace(/>/, ` c-comp="${c}">`);
-    }
-    if (!primeObj[c]) primeObj[c] = init;
-    firsts.push(c);
-    return res;
-  }
-  return _C;
+export function useContext(ctx) {
+  return curHook ? curHook.t[ctx.i] : void 0;
 }
 
-// CREDIT & ORIGINAL https://github.com/developit/vhtml
-// Add event, ref and style as object.
-export function h(tag, props) {
-  const args = [].slice.call(arguments, 2);
-  const arr = [];
-  let str = '',
-    i = args.length;
+function initFunc(fn) {
+  if (fn.i === void 0) {
+    fn.i = 0;
+    fn.m = fidx++;
+  }
+}
+
+export function comp(fn) {
+  initFunc(fn);
+  const { i, m } = fn;
+  const c = '' + m + (fn.name || fn.toString().length) + i;
+  const init = curComp[c] || { s: [], i: 0, e: [], y: [], t: [] };
+  fn.i++;
+  return (p) => {
+    if (hasContext()) init.t = curHook.t;
+    curHook = init;
+    init.i = 0;
+    const res = renderToString(fn(p === undefined ? {} : p));
+    if (!curComp[c]) curComp[c] = init;
+    firsts.push({ c, fn });
+    return res;
+  };
+}
+
+export function html(ret) {
+  const subs = [].slice.call(arguments, 1);
+  return ret.reduce((start, end, no) => {
+    let val = subs[no - 1];
+    if (val === null || val === undefined) val = '';
+    if (Array.isArray(val)) val = val.join('');
+    const type = typeof val;
+    if (type === 'function' || type === 'boolean' || type === 'object') {
+      const arr = start.match(/[^ ]+/g) || [];
+      const value = val;
+      const key = (arr[arr.length - 1] || '').replace(/=|"/g, '').toLowerCase();
+      const id = idx++;
+      const attr = `c-${key}="${id}`;
+      if (key === 'ref') {
+        val.ref = () => reElem.querySelector(`[${attr}"]`);
+      }
+      fno[id] = { key, value };
+      start = arr.slice(0, -1).join(' ') + ` ${attr}`;
+      val = '';
+    }
+    return start + String(val) + end;
+  });
+}
+
+export function h(name, props) {
   props = props || {};
-  while (i--) {
-    if (args[i] !== false) {
-      arr.push(typeof args[i] === 'number' ? String(args[i]) : args[i]);
+  if (!name) return '';
+  const children = [].slice
+    .call(arguments, 2)
+    .map((el) => (typeof el === 'number' ? String(el) : el))
+    .filter(Boolean);
+  if (isFunc(name)) {
+    props.children = children;
+    initFunc(name);
+    return { comp: name, props, __c: true };
+  }
+  let str = `<${name}`;
+  for (let k in props) {
+    const val = props[k];
+    if (reElem && (val === undefined || val === null)) val = '';
+    if (
+      val !== undefined &&
+      val !== null &&
+      k !== dangerHTML &&
+      k !== 'children'
+    ) {
+      const type = typeof val;
+      if (type === 'function' || type === 'boolean' || type === 'object') {
+        const value = val;
+        const key = k.toLowerCase();
+        if (type === 'object' && key !== 'ref') {
+          str += ` ${k}="${Object.keys(val).reduce(
+            (a, b) =>
+              a +
+              b
+                .split(/(?=[A-Z])/)
+                .join('-')
+                .toLowerCase() +
+              ':' +
+              (typeof val[b] === 'number' ? val[b] + 'px' : val[b]) +
+              ';',
+            ''
+          )}"`;
+        } else if (reElem) {
+          const id = idx++;
+          if (key === 'ref') {
+            val.ref = () => getSelector(key, id);
+          }
+          fno[id] = { key, value };
+          str += ` c-${key}="${id}"`;
+        } else if (val === true) str += ` ${k}`;
+        else if (val === false) str += '';
+      } else str += ` ${k}="${val}"`;
     }
   }
-  if (isFunc(tag)) {
-    props.children = arr.reverse();
-    return { comp: tag, props, __c: true };
-  }
-  if (tag) {
-    str += `<${tag}`;
-    if (props) {
-      for (let k in props) {
-        const val = props[k];
-        if (
-          val !== undefined &&
-          val !== null &&
-          k !== dangerHTML &&
-          k !== 'children'
-        ) {
-          const type = typeof val;
-          if (type === 'function' || type === 'boolean' || type === 'object') {
-            const value = val;
-            const key = k.toLowerCase();
-            if (type === 'object' && key !== 'ref') {
-              str += ` ${k}="${Object.keys(val).reduce(
-                (a, b) =>
-                  a +
-                  b
-                    .split(/(?=[A-Z])/)
-                    .join('-')
-                    .toLowerCase() +
-                  ':' +
-                  val[b] +
-                  ';',
-                ''
-              )}"`;
-            } else if (reElem) {
-              const id = idx++;
-              if (key === 'ref') {
-                val.ref = () => getSelector(key, id);
-              }
-              fno[id] = { key, value };
-              str += ` c-${key}="${id}"`;
-            } else if (val === true) str += ` ${k}`;
-            else if (val === false) str += '';
-          } else str += ` ${k}="${val}"`;
-        }
-      }
-    }
-    str += '>';
-  }
+  str += '>';
   if (
-    [
-      'area',
-      'base',
-      'br',
-      'col',
-      'command',
-      'embed',
-      'hr',
-      'img',
-      'input',
-      'keygen',
-      'link',
-      'meta',
-      'param',
-      'source',
-      'track',
-      'wbr',
-    ].indexOf(tag) === -1
+    /area|base|br|col|embed|hr|img|input|keygen|link|meta|param|source|track|wbr/.test(
+      name
+    )
   ) {
-    if (props[dangerHTML]) {
-      str += props[dangerHTML].__html;
-    } else {
-      let j = arr.length;
-      while (j--) {
-        const child = renderToString(arr[j]);
-        if (typeof child === 'string') str += child;
-      }
-    }
-    str += tag ? `</${tag}>` : '';
+    return str;
   }
-  return str;
+  if (props[dangerHTML]) {
+    str += props[dangerHTML].__html;
+  } else {
+    for (let i = 0; i < children.length; i++) {
+      const child = renderToString(children[i]);
+      if (typeof child === 'string') str += child;
+    }
+  }
+  return (str += name ? `</${name}>` : '');
 }
 
 export const Fragment = ({ children }) => children;

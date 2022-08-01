@@ -1,26 +1,19 @@
-// CREDIT & ORIGINAL: https://gomakethings.com/dom-diffing-with-vanilla-js
-// Add diff attribute
-function withTry(cb) {
-  try {
-    cb();
-  } catch (_e) {
-    /* noop */
-  }
-}
+// FROM: https://gomakethings.com/dom-diffing-with-vanilla-js
+
 function getAttr(node, attr) {
-  if (!node.getAttribute) return '';
-  return node.getAttribute(attr);
+  return node.getAttribute ? node.getAttribute(attr) : '';
 }
 function getNodeContent(node, attr) {
   if (attr) {
-    if (attr === 'href' || (attr[0] === 'c' && attr[1] === '-'))
-      return getAttr(node, attr);
-    if (typeof node[attr] !== 'string') return getAttr(node, attr);
-    return node[attr];
+    if (attr in node && typeof node[attr] === 'string') {
+      if (attr !== 'href') return node[attr];
+    }
+    return getAttr(node, attr);
   }
   if (node.childNodes && node.childNodes.length > 0) return null;
   return node.textContent;
 }
+
 export function diff(template, elem) {
   const domNodes = elem.childNodes;
   const templateNodes = template.childNodes;
@@ -34,8 +27,7 @@ export function diff(template, elem) {
   }
   templateNodes.forEach((node, index) => {
     if (!domNodes[index]) {
-      const newNode = node.cloneNode(true);
-      elem.appendChild(newNode);
+      elem.appendChild(node.cloneNode(true));
       return;
     }
     if (node.attributes && node.attributes.length) {
@@ -44,14 +36,12 @@ export function diff(template, elem) {
       while (i < len) {
         const attr = node.attributes[i];
         if (attr.name) {
-          const tpl = getNodeContent(node, attr.name) || '';
-          const tplDom = getNodeContent(domNodes[index], attr.name) || '';
+          const nm = attr.name;
+          const tpl = getNodeContent(node, nm);
+          const tplDom = getNodeContent(domNodes[index], nm);
           if (tpl !== tplDom) {
-            let nm = attr.name;
-            if (nm === 'class') nm = 'className';
-            else if (nm === 'for') nm = 'htmlFor';
-            withTry(() => domNodes[index].setAttribute(nm, tpl));
-            withTry(() => (domNodes[index][nm] = tpl));
+            if (nm in domNodes[index]) domNodes[index][nm] = tpl;
+            else domNodes[index].setAttribute?.(nm, tpl);
           }
         }
         i++;
@@ -60,7 +50,7 @@ export function diff(template, elem) {
     if (
       node.nodeType !== domNodes[index].nodeType ||
       node.tagName !== domNodes[index].tagName ||
-      getAttr(node, 'c-comp') !== getAttr(domNodes[index], 'c-comp')
+      getAttr(node, 'style') !== getAttr(domNodes[index], 'style')
     ) {
       domNodes[index].parentNode.replaceChild(
         node.cloneNode(true),

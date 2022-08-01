@@ -59,4 +59,4 @@ const Todo = () => {
   );
 };
 
-render(Todo, document.getElementById("app"));
+render(<Todo/>, document.getElementById("app"));

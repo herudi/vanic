@@ -30,7 +30,7 @@ const Hello = () => {
   )
 }
 
-test('render', async t => {
+test('useEffect', async t => {
   render(<Hello />, document.getElementById('app'));
   const btn = document.querySelector('button');
   btn.click();

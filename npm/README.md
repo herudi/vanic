@@ -5,7 +5,7 @@ A small, Hook-based library for creating Reactive-UI.
 Vanic is an `html-attribute` first.
 
 [![ci](https://github.com/herudi/vanic/workflows/ci/badge.svg)](https://github.com/herudi/vanic)
-[![npm version](https://img.shields.io/badge/npm-0.0.23-blue.svg)](https://npmjs.org/package/vanic)
+[![npm version](https://img.shields.io/badge/npm-0.0.24-blue.svg)](https://npmjs.org/package/vanic)
 [![License](https://img.shields.io/:license-mit-blue.svg)](http://badges.mit-license.org)
 [![download-url](https://img.shields.io/npm/dm/vanic.svg)](https://npmjs.org/package/vanic)
 [![gzip](https://img.badgesize.io/https:/unpkg.com/vanic/index.min.js?label=gzip&compression=gzip)](https://github.com/herudi/vanic)
@@ -15,6 +15,7 @@ Vanic is an `html-attribute` first.
 - Small.
 - Reactive-UI.
 - Hooks.
+- SSR via renderToString without external deps.
 - More.
 
 ## Examples
@@ -23,7 +24,7 @@ Vanic is an `html-attribute` first.
 - [With Router](https://codesandbox.io/s/vanic-with-router-j10svs?file=/src/index.jsx)
 
 ## Html-Attribute First
-In vanic, component or event and more will convert to `html-attribute`.
+In vanic, event and more will convert to `html-attribute`.
 
 ## Install
 
@@ -35,14 +36,21 @@ npm i vanic
 yarn add vanic
 ```
 
+### Browser
+
+```html
+<!-- html head -->
+<script src="//unpkg.com/vanic"></script>
+```
 ### Deno
 
 ```ts
-import {...} from "https://deno.land/x/vanic@0.0.23/mod.ts";
+import {...} from "https://deno.land/x/vanic@0.0.24/mod.ts";
 
 // more code
 ```
-### Usage
+
+## Usage Jsx
 
 ```jsx
 /** @jsx h */
@@ -58,15 +66,36 @@ const Counter = () => {
 
   return (
     <div>
-      <button onClick={() => setCount(count + 1)}>Increment</button>
+      <button onclick={() => setCount(count + 1)}>Increment</button>
       <h2>{count}</h2>
     </div>
   );
 };
 
+render(<Counter/>, document.getElementById("app"));
+```
+## Usage Browser
+
+```js
+const { html, comp, render, useEffect, useState } = Vanic;
+
+const Counter = comp(() => {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    // log counter
+    console.log(count);
+  }, [count]);
+
+  return html`
+    <div>
+      <button onclick="${() => setCount(count + 1)}">Increment</button>
+      <h2>${count}</h2>
+    </div>
+  `
+});
+
 render(Counter, document.getElementById("app"));
-// or
-// render(<Counter/>, document.getElementById("app"));
 ```
 
 ### Server Side
@@ -132,7 +161,7 @@ const addTodo = useCallback(() => {
 const count = useRef(0);
 ```
 
-> Note: `useRef` for access DOM different from react.
+> Note: `useRef` for access DOM different from React.useRef.
 
 Accesing DOM via useRef
 
@@ -151,6 +180,8 @@ const Home = () => {
 
 ### UseContext & CreateContext
 
+> jsx only
+
 ```js
 const ThemeContext = createContext();
 
@@ -168,7 +199,7 @@ const App = () => {
   )
 };
 
-render(App, document.getElementById("app"));
+render(<App/>, document.getElementById("app"));
 ```
 
 ### Custom Hook
@@ -224,7 +255,7 @@ const MyForm = () => {
   );
 };
 
-render(MyForm, document.getElementById("app"));
+render(<MyForm/>, document.getElementById("app"));
 ```
 
 ## Style
@@ -250,5 +281,19 @@ const App = () => {
   )
 }
 
-render(App, document.getElementById("app"));
+render(<App/>, document.getElementById("app"));
+```
+
+## isValidElement
+```jsx
+/** @jsx h */
+import { h, isValidElement } from "vanic";
+
+const App = () => <h1>Hello</h1>;
+
+console.log(isValidElement(<App/>)); // true
+
+console.log(isValidElement("noop")); // false
+
+console.log(isValidElement({ name: "john" })); // false
 ```

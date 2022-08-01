@@ -2,7 +2,7 @@ import { terser } from "rollup-plugin-terser";
 import { getBabelOutputPlugin } from '@rollup/plugin-babel';
 import * as fs from "fs";
 
-const VERSION = "0.0.23";
+const VERSION = "0.0.24";
 try {
   fs.rmSync("npm", { recursive: true });
 } catch (error) {/* noop */ }
@@ -47,7 +47,7 @@ const config = [
     ]
   },
   {
-    input: 'src/index.js',
+    input: 'src/browser.js',
     output: [
       {
         sourcemap: true,
