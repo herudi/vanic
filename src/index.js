@@ -236,7 +236,7 @@ export function h(name, props) {
   }
   let str = `<${name}`;
   for (let k in props) {
-    const val = props[k];
+    let val = props[k];
     if (reElem && (val === undefined || val === null)) val = '';
     if (
       val !== undefined &&

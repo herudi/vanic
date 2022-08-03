@@ -5,7 +5,7 @@ A small, Hook-based library for creating Reactive-UI.
 Vanic is an `html-attribute` first.
 
 [![ci](https://github.com/herudi/vanic/workflows/ci/badge.svg)](https://github.com/herudi/vanic)
-[![npm version](https://img.shields.io/badge/npm-0.0.24-blue.svg)](https://npmjs.org/package/vanic)
+[![npm version](https://img.shields.io/badge/npm-0.0.25-blue.svg)](https://npmjs.org/package/vanic)
 [![License](https://img.shields.io/:license-mit-blue.svg)](http://badges.mit-license.org)
 [![download-url](https://img.shields.io/npm/dm/vanic.svg)](https://npmjs.org/package/vanic)
 [![gzip](https://img.badgesize.io/https:/unpkg.com/vanic/index.min.js?label=gzip&compression=gzip)](https://github.com/herudi/vanic)
@@ -45,7 +45,7 @@ yarn add vanic
 ### Deno
 
 ```ts
-import {...} from "https://deno.land/x/vanic@0.0.24/mod.ts";
+import {...} from "https://deno.land/x/vanic@0.0.25/mod.ts";
 
 // more code
 ```

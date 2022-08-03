@@ -2,7 +2,7 @@ import { terser } from "rollup-plugin-terser";
 import { getBabelOutputPlugin } from '@rollup/plugin-babel';
 import * as fs from "fs";
 
-const VERSION = "0.0.24";
+const VERSION = "0.0.25";
 try {
   fs.rmSync("npm", { recursive: true });
 } catch (error) {/* noop */ }
