@@ -20,7 +20,7 @@ fs.writeFileSync("npm/package.json", JSON.stringify({
   "version": VERSION,
   "description": "A small, hook-based library for creating reactive-ui in Vanilla.",
   "main": "./cjs/index.js",
-  "unpkg": "./browser/index.min.js",
+  "unpkg": "./browser/index.js",
   "module": "./esm/index.js",
   "types": "./types/index.d.ts",
   "author": "herudi",
