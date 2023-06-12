@@ -45,7 +45,7 @@ yarn add vanic
 ### Deno
 
 ```ts
-import {...} from "https://deno.land/x/vanic@0.0.25/mod.ts";
+import {...} from "https://deno.land/x/vanic/mod.ts";
 
 // more code
 ```

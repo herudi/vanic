@@ -3,4 +3,9 @@ dev
 dist
 /index.html
 package-lock.json
-.cache
+.parcel-cache
+.vscode
+bun.lockb
+/dev.js
+/dev.jsx
+deno.json

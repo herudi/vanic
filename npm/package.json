@@ -1,11 +1,11 @@
 {
   "name": "vanic",
-  "version": "0.0.25",
+  "version": "0.0.26",
   "description": "A small, hook-based library for creating reactive-ui in Vanilla.",
-  "main": "index.js",
-  "unpkg": "index.min.js",
-  "module": "esm.js",
-  "types": "index.d.ts",
+  "main": "./cjs/index.js",
+  "unpkg": "./browser/index.min.js",
+  "module": "./esm/index.js",
+  "types": "./types/index.d.ts",
   "author": "herudi",
   "license": "MIT",
   "repository": {
@@ -22,5 +22,23 @@
     "Tiny jsx for vanilla"
   ],
   "dependencies": {},
-  "devDependencies": {}
+  "devDependencies": {},
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "require": "./cjs/index.js",
+      "import": "./esm/index.js"
+    },
+    "./jsx-runtime": {
+      "types": "./types/jsx-runtime.d.ts",
+      "require": "./cjs/runtime/jsx-runtime.js",
+      "import": "./esm/runtime/jsx-runtime.js"
+    },
+    "./jsx-dev-runtime": {
+      "types": "./types/jsx-runtime.d.ts",
+      "require": "./cjs/runtime/jsx-dev-runtime.js",
+      "import": "./esm/runtime/jsx-dev-runtime.js"
+    },
+    "./*": "./*"
+  }
 }

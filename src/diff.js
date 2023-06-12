@@ -5,7 +5,7 @@ function getAttr(node, attr) {
 }
 function getNodeContent(node, attr) {
   if (attr) {
-    if (attr in node && typeof node[attr] === 'string') {
+    if (typeof node[attr] === 'string') {
       if (attr !== 'href') return node[attr];
     }
     return getAttr(node, attr);
